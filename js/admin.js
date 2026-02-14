@@ -137,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function authenticateAdmin(email, password) {
+    const normalizedEmail = normalizeEmail(email);
     const attempts = [
       { emailColumn: 'email', passwordColumn: 'password', idColumn: 'id' },
       { emailColumn: 'admin_email', passwordColumn: 'admin_password', idColumn: 'admin_id' },
@@ -145,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     for (const attempt of attempts) {
-      const result = await tryAdminLookup(email, password, attempt);
+      const result = await tryAdminLookup(normalizedEmail, password, attempt);
 
       if (result.success && result.admin) {
         return result.admin;
@@ -164,7 +165,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const { data, error } = await supabaseClient
         .from('admins')
         .select('*')
-        .eq(attempt.emailColumn, email)
         .limit(50);
 
       if (error) {
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const rows = Array.isArray(data) ? data : [];
 
       const matchedRow = rows.find((row) => {
-        const rowEmail = String(row?.[attempt.emailColumn] ?? '').trim();
+        const rowEmail = normalizeEmail(row?.[attempt.emailColumn]);
         const rowPassword = String(row?.[attempt.passwordColumn] ?? '');
         return rowEmail === email && rowPassword === password;
       });
@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const idValue = matchedRow?.[attempt.idColumn] ?? matchedRow?.id ?? matchedRow?.admin_id ?? null;
-      const emailValue = String(matchedRow?.[attempt.emailColumn] ?? matchedRow?.email ?? matchedRow?.admin_email ?? email);
+      const emailValue = String(matchedRow?.[attempt.emailColumn] ?? matchedRow?.email ?? matchedRow?.admin_email ?? email).trim();
 
       return {
         success: true,
@@ -562,6 +562,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     return normalizedValue.charAt(0).toUpperCase() + normalizedValue.slice(1);
+  }
+
+  function normalizeEmail(value) {
+    return String(value ?? '').trim().toLowerCase();
   }
 
   function mapStatusToValue(value) {
