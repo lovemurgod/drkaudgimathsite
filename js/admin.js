@@ -58,14 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
       loginForm.addEventListener('submit', handleLoginSubmit);
     }
 
-    if (loginButton && loginForm) {
-      loginButton.addEventListener('click', () => {
-        if (typeof loginForm.requestSubmit === 'function') {
-          loginForm.requestSubmit();
-        }
-      });
-    }
-
     if (logoutButton) {
       logoutButton.addEventListener('click', handleLogout);
     }
@@ -122,25 +114,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      const { data, error } = await supabaseClient
-        .from('admins')
-        .select('id, email, password')
-        .eq('email', email)
-        .eq('password', password)
-        .maybeSingle();
+      const matchedAdmin = await authenticateAdmin(email, password);
 
-      if (error) {
-        throw error;
-      }
-
-      if (!data) {
+      if (!matchedAdmin) {
         setLoginMessage('Invalid email or password.');
         return;
       }
 
       const sessionData = {
-        admin_id: data.id,
-        email: data.email,
+        admin_id: matchedAdmin.id,
+        email: matchedAdmin.email,
         login_at: new Date().toISOString()
       };
 
@@ -150,6 +133,77 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error('Login error:', error);
       setLoginMessage('Unable to login right now. Please try again.');
+    }
+  }
+
+  async function authenticateAdmin(email, password) {
+    const attempts = [
+      { emailColumn: 'email', passwordColumn: 'password', idColumn: 'id' },
+      { emailColumn: 'admin_email', passwordColumn: 'admin_password', idColumn: 'admin_id' },
+      { emailColumn: 'email', passwordColumn: 'admin_password', idColumn: 'id' },
+      { emailColumn: 'admin_email', passwordColumn: 'password', idColumn: 'admin_id' }
+    ];
+
+    for (const attempt of attempts) {
+      const result = await tryAdminLookup(email, password, attempt);
+
+      if (result.success && result.admin) {
+        return result.admin;
+      }
+
+      if (result.fatalError) {
+        throw result.fatalError;
+      }
+    }
+
+    return null;
+  }
+
+  async function tryAdminLookup(email, password, attempt) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('admins')
+        .select('*')
+        .eq(attempt.emailColumn, email)
+        .limit(50);
+
+      if (error) {
+        const code = String(error.code || '');
+        const message = String(error.message || '').toLowerCase();
+        const isMissingColumn = code === '42703' || message.includes('column') || message.includes('does not exist');
+
+        if (isMissingColumn) {
+          return { success: false, admin: null, fatalError: null };
+        }
+
+        return { success: false, admin: null, fatalError: error };
+      }
+
+      const rows = Array.isArray(data) ? data : [];
+
+      const matchedRow = rows.find((row) => {
+        const rowEmail = String(row?.[attempt.emailColumn] ?? '').trim();
+        const rowPassword = String(row?.[attempt.passwordColumn] ?? '');
+        return rowEmail === email && rowPassword === password;
+      });
+
+      if (!matchedRow) {
+        return { success: true, admin: null, fatalError: null };
+      }
+
+      const idValue = matchedRow?.[attempt.idColumn] ?? matchedRow?.id ?? matchedRow?.admin_id ?? null;
+      const emailValue = String(matchedRow?.[attempt.emailColumn] ?? matchedRow?.email ?? matchedRow?.admin_email ?? email);
+
+      return {
+        success: true,
+        admin: {
+          id: idValue,
+          email: emailValue
+        },
+        fatalError: null
+      };
+    } catch (error) {
+      return { success: false, admin: null, fatalError: error };
     }
   }
 
