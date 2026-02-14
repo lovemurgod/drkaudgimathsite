@@ -668,13 +668,17 @@ p {
   background: linear-gradient(180deg, #edf6fa 0%, #f8fcff 100%);
 }
 
+.admin-page [hidden] {
+  display: none !important;
+}
+
 .admin-page main {
   width: min(100% - 2rem, 1120px);
   margin-inline: auto;
   padding-block: 2rem;
 }
 
-.admin-page #login-view {
+.admin-page #login-view:not([hidden]) {
   min-height: calc(100vh - 4rem);
   display: grid;
   place-items: center;
@@ -784,7 +788,7 @@ p {
   font-size: 0.94rem;
 }
 
-.admin-page #dashboard-view {
+.admin-page #dashboard-view:not([hidden]) {
   display: grid;
   gap: 1rem;
 }
@@ -1003,7 +1007,7 @@ p {
     min-width: 260px;
   }
 
-  .admin-page #login-view {
+  .admin-page #login-view:not([hidden]) {
     padding: 2.5rem 0;
   }
 
