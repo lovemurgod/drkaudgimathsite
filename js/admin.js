@@ -40,6 +40,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const manualDateInput = document.getElementById('manual-date');
   const manualTimeInput = document.getElementById('manual-time');
   const manualNotesInput = document.getElementById('manual-notes');
+  const manualSubmitButton = document.getElementById('manual-submit');
+
+  let manualFormMessage = document.getElementById('manual-form-message');
+  if (!manualFormMessage && manualForm) {
+    manualFormMessage = document.createElement('p');
+    manualFormMessage.id = 'manual-form-message';
+    manualFormMessage.setAttribute('role', 'status');
+    manualFormMessage.setAttribute('aria-live', 'polite');
+    manualForm.appendChild(manualFormMessage);
+  }
 
   let dashboardInitialized = false;
 
@@ -466,6 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function handleManualAppointmentSubmit(event) {
     event.preventDefault();
+    setManualFormMessage('');
 
     const patientName = (manualPatientNameInput?.value || '').trim();
     const phone = (manualPhoneInput?.value || '').trim();
@@ -475,7 +486,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const notes = (manualNotesInput?.value || '').trim();
 
     if (!patientName || !phone || !doctorId || !date || !time) {
+      setManualFormMessage('Please fill all required fields.', 'error');
       return;
+    }
+
+    if (manualSubmitButton) {
+      manualSubmitButton.disabled = true;
+      manualSubmitButton.textContent = 'Submitting...';
     }
 
     try {
@@ -486,8 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
         appointment_date: date,
         appointment_time: time,
         notes,
-        source: 'Phone',
-        status: 'Pending'
+        source: 'Phone'
       };
 
       const { error } = await supabaseClient.from('appointments').insert(payload);
@@ -498,8 +514,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       manualForm.reset();
       await loadAppointments();
+      setManualFormMessage('Manual appointment created successfully.', 'success');
     } catch (error) {
       console.error('Error creating manual appointment:', error);
+      const message = String(error?.message || 'Unable to create appointment. Please try again.');
+      setManualFormMessage(message, 'error');
+    } finally {
+      if (manualSubmitButton) {
+        manualSubmitButton.disabled = false;
+        manualSubmitButton.textContent = 'Submit';
+      }
     }
   }
 
@@ -548,6 +572,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginMessage) {
       loginMessage.textContent = '';
     }
+  }
+
+  function setManualFormMessage(message, type) {
+    if (!manualFormMessage) {
+      return;
+    }
+
+    manualFormMessage.textContent = message;
+
+    if (!message) {
+      manualFormMessage.style.color = '';
+      return;
+    }
+
+    manualFormMessage.style.color = type === 'success' ? '#1f7a1f' : '#b71f1f';
   }
 
   function mapStatusToDb(value) {
