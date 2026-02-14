@@ -890,6 +890,10 @@ p {
     width: 100%;
     justify-content: center;
   }
+
+  .legacy__image {
+    object-position: center top;
+  }
 }
 
 @media (max-width: 480px) {
