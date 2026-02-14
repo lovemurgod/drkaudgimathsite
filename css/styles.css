@@ -570,6 +570,88 @@ p {
   padding: 0.2rem;
 }
 
+.appointment-page .appointment-section {
+  background: linear-gradient(180deg, #edf6fa 0%, #f8fcff 100%);
+}
+
+.appointment-page .appointment-card {
+  width: min(100%, 760px);
+  margin-inline: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 12px 24px rgba(13, 50, 77, 0.09);
+  padding: 1.25rem;
+}
+
+.appointment-page #appointment-title {
+  margin-bottom: 0.55rem;
+}
+
+.appointment-intro {
+  margin-bottom: 1.2rem;
+}
+
+.appointment-page #appointment-form {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.appointment-form__field {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.appointment-form__field label {
+  font-weight: 650;
+  color: #243a4d;
+}
+
+.appointment-page #appointment-form input,
+.appointment-page #appointment-form select,
+.appointment-page #appointment-form textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--color-text);
+  padding: 0.72rem 0.85rem;
+  font: inherit;
+}
+
+.appointment-page #appointment-form textarea {
+  resize: vertical;
+  min-height: 112px;
+}
+
+.appointment-page #appointment-form input:focus,
+.appointment-page #appointment-form select:focus,
+.appointment-page #appointment-form textarea:focus {
+  outline: 3px solid rgba(0, 151, 178, 0.2);
+  outline-offset: 1px;
+  border-color: var(--color-primary);
+}
+
+.appointment-form__actions {
+  margin-top: 0.35rem;
+}
+
+.appointment-form__actions .button {
+  width: 100%;
+}
+
+.appointment-form__message {
+  min-height: 1.4em;
+  font-weight: 600;
+}
+
+.appointment-help-text {
+  margin-top: 1rem;
+  color: #253d52;
+  font-size: 2em;
+  text-align: center;
+}
+
 @media (max-width: 767px) {
   .primary-nav__list li:first-child {
     flex: 1 1 100%;
@@ -669,6 +751,31 @@ p {
     align-items: center;
     justify-items: start;
     gap: 1rem;
+  }
+
+  .appointment-page .appointment-card {
+    padding: 1.7rem;
+  }
+
+  .appointment-page #appointment-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1rem;
+    row-gap: 1rem;
+  }
+
+  .appointment-page .appointment-form__field,
+  .appointment-page .appointment-form__actions,
+  .appointment-page .appointment-form__message {
+    grid-column: 1 / -1;
+  }
+
+  .appointment-page .appointment-form__field--half {
+    grid-column: span 1;
+  }
+
+  .appointment-page .appointment-form__actions .button {
+    width: auto;
+    min-width: 260px;
   }
 }
 

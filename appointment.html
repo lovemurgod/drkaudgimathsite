@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Book an appointment at Dr. G. B. Karudgimath Multispeciality Hospital." />
+  <title>Book Appointment | Dr. G. B. Karudgimath Multispeciality Hospital</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="appointment-page">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="site-header" aria-label="Main header">
+    <div class="container site-header__inner">
+      <a class="brand" href="index.html" aria-label="Dr. G. B. Karudgimath Multispeciality Hospital home">
+        <img src="Assets/images/Logo.png" alt="Dr. G. B. Karudgimath Multispeciality Hospital logo" class="brand__logo" />
+        <span class="brand__name">Dr. G. B. Karudgimath Multispeciality Hospital</span>
+      </a>
+
+      <nav class="primary-nav" aria-label="Primary navigation">
+        <ul class="primary-nav__list">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="tel:+919740978768" class="button button--small button--emergency" aria-label="Call ambulance now">Call Ambulance Now</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="appointment-section" aria-labelledby="appointment-title">
+      <div class="container">
+        <div class="appointment-card">
+          <h1 id="appointment-title">Book an Appointment</h1>
+          <p class="appointment-intro">Please fill in your details. Our team will contact you to confirm your appointment.</p>
+
+          <form id="appointment-form" novalidate>
+            <div class="appointment-form__field">
+              <label for="patient_name">Patient Name *</label>
+              <input type="text" id="patient_name" name="patient_name" required autocomplete="name" />
+            </div>
+
+            <div class="appointment-form__field">
+              <label for="patient_phone">Phone Number *</label>
+              <input type="tel" id="patient_phone" name="patient_phone" required autocomplete="tel" />
+            </div>
+
+            <div class="appointment-form__field">
+              <label for="doctor_id">Select Doctor *</label>
+              <select id="doctor_id" name="doctor_id" required>
+                <option value="">Loading doctors...</option>
+              </select>
+            </div>
+
+            <div class="appointment-form__field appointment-form__field--half">
+              <label for="appointment_date">Appointment Date *</label>
+              <input type="date" id="appointment_date" name="appointment_date" required />
+            </div>
+
+            <div class="appointment-form__field appointment-form__field--half">
+              <label for="appointment_time">Appointment Time *</label>
+              <input type="text" id="appointment_time" name="appointment_time" required placeholder="e.g., 10:30 AM" />
+            </div>
+
+            <div class="appointment-form__field">
+              <label for="notes">Notes (Optional)</label>
+              <textarea id="notes" name="notes" rows="4" placeholder="Add any symptoms or additional information"></textarea>
+            </div>
+
+            <div class="appointment-form__actions">
+              <button type="submit" class="button button--primary">Submit Appointment Request</button>
+            </div>
+
+            <p id="form-message" class="appointment-form__message" role="status" aria-live="polite"></p>
+          </form>
+
+          <p class="appointment-help-text"><strong>We are here to help</strong></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <img src="Assets/images/Logo.png" alt="Dr. G. B. Karudgimath Multispeciality Hospital footer logo" class="site-footer__logo" />
+      <p>Dr. G. B. Karudgimath Multispeciality Hospital, Badami</p>
+      <p>&copy; <span>2026</span> All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="supabaseClient.js" defer></script>
+  <script src="appointments.js" defer></script>
+</body>
+</html>
