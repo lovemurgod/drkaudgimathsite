@@ -652,6 +652,231 @@ p {
   text-align: center;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.admin-page {
+  background: linear-gradient(180deg, #edf6fa 0%, #f8fcff 100%);
+}
+
+.admin-page main {
+  width: min(100% - 2rem, 1120px);
+  margin-inline: auto;
+  padding-block: 2rem;
+}
+
+.admin-page #login-view {
+  min-height: calc(100vh - 4rem);
+  display: grid;
+  place-items: center;
+  padding: 1.25rem 0;
+}
+
+.admin-page .login-card {
+  width: min(100%, 460px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 14px 28px rgba(13, 50, 77, 0.12);
+  padding: 1.4rem;
+}
+
+.admin-page #login-title {
+  font-size: clamp(1.65rem, 3.5vw, 2rem);
+  margin-bottom: 1rem;
+}
+
+.admin-page #login-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.admin-page #login-form > div {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.admin-page label {
+  font-weight: 650;
+  color: #243a4d;
+}
+
+.admin-page input,
+.admin-page select,
+.admin-page textarea,
+.admin-page button {
+  font: inherit;
+}
+
+.admin-page input,
+.admin-page select,
+.admin-page textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--color-text);
+  padding: 0.7rem 0.8rem;
+}
+
+.admin-page textarea {
+  resize: vertical;
+  min-height: 108px;
+}
+
+.admin-page input:focus,
+.admin-page select:focus,
+.admin-page textarea:focus {
+  outline: 3px solid rgba(0, 151, 178, 0.2);
+  outline-offset: 1px;
+  border-color: var(--color-primary);
+}
+
+.admin-page button {
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.65rem 1rem;
+  transition: background-color var(--transition-standard), box-shadow var(--transition-standard), transform var(--transition-standard), border-color var(--transition-standard);
+}
+
+.admin-page #login-button,
+.admin-page #manual-submit,
+.admin-page [data-action='update-status'] {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(13, 50, 77, 0.1);
+}
+
+.admin-page #login-button:hover,
+.admin-page #manual-submit:hover,
+.admin-page [data-action='update-status']:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+.admin-page #logout-button {
+  background: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.admin-page #logout-button:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.admin-page #login-message {
+  min-height: 1.2rem;
+  color: #b71f1f;
+  font-weight: 600;
+  font-size: 0.94rem;
+}
+
+.admin-page #dashboard-view {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-page .dashboard-top-bar,
+.admin-page #dashboard-view > section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(13, 50, 77, 0.09);
+  padding: 1rem;
+}
+
+.admin-page .dashboard-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.admin-page #dashboard-title {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.admin-page #dashboard-title::after {
+  display: none;
+}
+
+.admin-page #filters-title,
+.admin-page #appointments-title,
+.admin-page #manual-entry-title {
+  margin-bottom: 0.95rem;
+  font-size: 1.15rem;
+}
+
+.admin-page #filters-form,
+.admin-page #manual-appointment-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.admin-page .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+.admin-page table {
+  width: 100%;
+  min-width: 880px;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.admin-page thead {
+  background: #f2f8fb;
+}
+
+.admin-page th,
+.admin-page td {
+  text-align: left;
+  padding: 0.72rem 0.75rem;
+  border-bottom: 1px solid #e6eff5;
+  vertical-align: middle;
+}
+
+.admin-page th {
+  color: #244257;
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+}
+
+.admin-page td {
+  color: #2d4659;
+  font-size: 0.95rem;
+}
+
+.admin-page tbody tr:hover {
+  background: #f8fcff;
+}
+
+.admin-page td select[name='row-status'] {
+  min-width: 138px;
+}
+
+.admin-page [data-action='update-status'] {
+  min-height: 36px;
+  padding: 0.42rem 0.72rem;
+}
+
 @media (max-width: 767px) {
   .primary-nav__list li:first-child {
     flex: 1 1 100%;
@@ -776,6 +1001,38 @@ p {
   .appointment-page .appointment-form__actions .button {
     width: auto;
     min-width: 260px;
+  }
+
+  .admin-page #login-view {
+    padding: 2.5rem 0;
+  }
+
+  .admin-page .login-card,
+  .admin-page .dashboard-top-bar,
+  .admin-page #dashboard-view > section {
+    padding: 1.35rem;
+  }
+
+  .admin-page #filters-form {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
+    gap: 1rem;
+  }
+
+  .admin-page #manual-appointment-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1rem;
+    row-gap: 1rem;
+  }
+
+  .admin-page #manual-appointment-form > div:nth-child(6),
+  .admin-page #manual-submit {
+    grid-column: 1 / -1;
+  }
+
+  .admin-page #manual-submit {
+    width: fit-content;
+    min-width: 180px;
   }
 }
 
