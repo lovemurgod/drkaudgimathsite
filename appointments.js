@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const DOCTOR_SCHEDULES = [
+  const DEFAULT_DOCTOR_SCHEDULES = [
     { name: 'Dr. Vinayak Mugalakhod', days: 'Mon - Sat', time: '12:00pm to 4:00pm' },
     { name: 'Dr. Ajay T. Naik', days: 'Mon - Sat', time: '12:00pm to 4:00pm and 7:00pm to 9:00pm' },
     { name: 'Dr. Santosh B. Desai', days: 'Mon - Sat', time: '12:00pm to 4:00pm and 7:00pm to 9:00pm' },
@@ -14,9 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { name: 'Dr. Tohid Kazi', days: 'Mon-Sat', time: 'On Call' }
   ];
 
-  const scheduleLookup = new Map(
-    DOCTOR_SCHEDULES.map((schedule) => [normalizeDoctorName(schedule.name), schedule])
-  );
+  let scheduleLookup = new Map();
 
   const form = document.getElementById('appointment-form');
   const doctorSelect = document.getElementById('doctor') || document.getElementById('doctor_id');
@@ -48,18 +46,34 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  initializeDateInputState();
   initializeTimeDropdown();
-  loadDoctors();
+
+  bootstrap();
   form.addEventListener('submit', handleSubmit);
 
   doctorSelect.addEventListener('change', () => {
+    applyDateConstraintsForSelectedDoctor();
     refreshAvailableTimeOptions();
   });
 
   if (appointmentDateInput) {
     appointmentDateInput.addEventListener('change', () => {
+      enforceDateRuleForSelectedDoctor();
       refreshAvailableTimeOptions();
     });
+
+    appointmentDateInput.addEventListener('input', () => {
+      enforceDateRuleForSelectedDoctor();
+    });
+  }
+
+  async function bootstrap() {
+    const schedules = await loadDoctorSchedulesFromExcel();
+    updateScheduleLookup(Array.isArray(schedules) && schedules.length ? schedules : DEFAULT_DOCTOR_SCHEDULES);
+    await loadDoctors();
+    applyDateConstraintsForSelectedDoctor();
+    refreshAvailableTimeOptions();
   }
 
   async function loadDoctors() {
@@ -77,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       populateDoctorOptions(Array.isArray(data) ? data : []);
+      applyDateConstraintsForSelectedDoctor();
       refreshAvailableTimeOptions();
     } catch (error) {
       console.error('Error loading doctors:', error);
@@ -89,6 +104,115 @@ document.addEventListener('DOMContentLoaded', () => {
 
       showMessage('Unable to load doctors right now. Please refresh and try again.', 'error');
     }
+  }
+
+  async function loadDoctorSchedulesFromExcel() {
+    if (!window.XLSX) {
+      console.warn('SheetJS library is not available. Falling back to default doctor schedules.');
+      return [];
+    }
+
+    try {
+      const response = await fetch('DrSchedules.xlsx', { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Failed to load DrSchedules.xlsx: ${response.status}`);
+      }
+
+      const fileBuffer = await response.arrayBuffer();
+      const workbook = window.XLSX.read(fileBuffer, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+
+      if (!firstSheetName) {
+        return [];
+      }
+
+      const worksheet = workbook.Sheets[firstSheetName];
+      const rows = window.XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+      return rows
+        .map((row) => {
+          const name = String(row['Dr name'] ?? row['Doctor Name'] ?? row['Doctor'] ?? '').trim();
+          const days = String(row['Days available'] ?? row['Days'] ?? '').trim();
+          const time = String(row['Time available'] ?? row['Time'] ?? '').trim();
+
+          if (!name || !days || !time) {
+            return null;
+          }
+
+          return { name, days, time };
+        })
+        .filter(Boolean);
+    } catch (error) {
+      console.error('Error loading doctor schedules from DrSchedules.xlsx:', error);
+      return [];
+    }
+  }
+
+  function updateScheduleLookup(schedules) {
+    scheduleLookup = new Map(
+      schedules.map((schedule) => [normalizeDoctorName(schedule.name), schedule])
+    );
+  }
+
+  function initializeDateInputState() {
+    if (!appointmentDateInput) {
+      return;
+    }
+
+    appointmentDateInput.value = '';
+    appointmentDateInput.disabled = true;
+    appointmentDateInput.min = formatDateForInput(new Date());
+    appointmentDateInput.setCustomValidity('');
+  }
+
+  function applyDateConstraintsForSelectedDoctor() {
+    if (!appointmentDateInput) {
+      return;
+    }
+
+    const hasDoctor = Boolean(doctorSelect.value);
+    appointmentDateInput.disabled = !hasDoctor;
+    appointmentDateInput.min = formatDateForInput(new Date());
+
+    if (!hasDoctor) {
+      appointmentDateInput.value = '';
+      appointmentDateInput.setCustomValidity('');
+      return;
+    }
+
+    enforceDateRuleForSelectedDoctor();
+  }
+
+  function enforceDateRuleForSelectedDoctor() {
+    if (!appointmentDateInput || !appointmentDateInput.value || !doctorSelect.value) {
+      return true;
+    }
+
+    const selectedDoctorOption = doctorSelect.options[doctorSelect.selectedIndex];
+    const selectedDoctorName =
+      selectedDoctorOption?.dataset?.doctorName ||
+      selectedDoctorOption?.textContent ||
+      '';
+    const schedule = scheduleLookup.get(normalizeDoctorName(selectedDoctorName));
+
+    if (!schedule) {
+      appointmentDateInput.setCustomValidity('Schedule not available for selected doctor.');
+      return false;
+    }
+
+    const date = new Date(`${appointmentDateInput.value}T12:00:00`);
+    if (Number.isNaN(date.getTime())) {
+      appointmentDateInput.setCustomValidity('Please select a valid appointment date.');
+      return false;
+    }
+
+    if (!isDateAllowedByRule(date, schedule.days)) {
+      appointmentDateInput.setCustomValidity(`Doctor is unavailable on ${formatDayName(date)}.`);
+      return false;
+    }
+
+    appointmentDateInput.setCustomValidity('');
+    return true;
   }
 
   function initializeTimeDropdown() {
@@ -154,6 +278,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!appointmentDate) {
       appendTimePlaceholder('Select appointment date first');
+      return;
+    }
+
+    if (!enforceDateRuleForSelectedDoctor()) {
+      appendTimePlaceholder('Doctor unavailable on selected date');
       return;
     }
 
@@ -231,6 +360,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!patient_name || !patient_phone || !doctor_id || !appointment_date || !appointment_time) {
       showMessage('Please fill all required fields before submitting.', 'error');
+      return;
+    }
+
+    if (appointmentDateInput && !enforceDateRuleForSelectedDoctor()) {
+      showMessage(appointmentDateInput.validationMessage || 'Selected doctor is unavailable on this date.', 'error');
       return;
     }
 
@@ -487,5 +621,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function formatDayName(date) {
     return date.toLocaleDateString('en-US', { weekday: 'long' });
+  }
+
+  function formatDateForInput(date) {
+    const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+    return localDate.toISOString().split('T')[0];
   }
 });
