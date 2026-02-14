@@ -1,14 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('appointment-form');
-  const doctorSelect = document.getElementById('doctor');
-  const patientNameInput = document.getElementById('patient-name');
-  const patientPhoneInput = document.getElementById('patient-phone');
+  const doctorSelect = document.getElementById('doctor') || document.getElementById('doctor_id');
+  const patientNameInput = document.getElementById('patient-name') || document.getElementById('patient_name');
+  const patientPhoneInput = document.getElementById('patient-phone') || document.getElementById('patient_phone');
   const appointmentDateInput = document.getElementById('appointment-date');
   const appointmentTimeInput = document.getElementById('appointment-time');
   const notesInput = document.getElementById('notes');
   const formMessage = document.getElementById('form-message');
 
   const supabaseClient =
+    (window.supabaseClient && typeof window.supabaseClient.from === 'function' && window.supabaseClient) ||
     (window.supabase && typeof window.supabase.from === 'function' && window.supabase) ||
     (window.supabase && window.supabase.client && typeof window.supabase.client.from === 'function' && window.supabase.client) ||
     null;
