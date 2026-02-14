@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard | Hospital Appointment System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <main>
+    <section id="login-view" aria-labelledby="login-title">
+      <div class="login-card" role="region" aria-label="Admin login">
+        <h1 id="login-title">Admin Login</h1>
+
+        <form id="login-form" novalidate>
+          <div>
+            <label for="admin-email">Email</label>
+            <input
+              type="email"
+              id="admin-email"
+              name="admin-email"
+              autocomplete="email"
+              required
+            />
+          </div>
+
+          <div>
+            <label for="admin-password">Password</label>
+            <input
+              type="password"
+              id="admin-password"
+              name="admin-password"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+
+          <button type="submit" id="login-button">Login</button>
+          <div id="login-message" role="alert" aria-live="polite"></div>
+        </form>
+      </div>
+    </section>
+
+    <section id="dashboard-view" aria-labelledby="dashboard-title" hidden>
+      <header class="dashboard-top-bar">
+        <h2 id="dashboard-title">Reception Dashboard</h2>
+        <button type="button" id="logout-button">Logout</button>
+      </header>
+
+      <section aria-labelledby="filters-title">
+        <h3 id="filters-title">Filters</h3>
+        <form id="filters-form" novalidate>
+          <div>
+            <label for="filter-date">Date</label>
+            <input type="date" id="filter-date" name="filter-date" />
+          </div>
+
+          <div>
+            <label for="filter-doctor">Doctor</label>
+            <select id="filter-doctor" name="filter-doctor">
+              <option value="">All Doctors</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="filter-status">Status</label>
+            <select id="filter-status" name="filter-status">
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="no-show">No Show</option>
+            </select>
+          </div>
+        </form>
+      </section>
+
+      <section aria-labelledby="appointments-title">
+        <h3 id="appointments-title">Appointments</h3>
+        <div class="table-responsive">
+          <table>
+            <caption class="sr-only">Hospital appointment list</caption>
+            <thead>
+              <tr>
+                <th scope="col">Patient Name</th>
+                <th scope="col">Phone</th>
+                <th scope="col">Doctor</th>
+                <th scope="col">Date</th>
+                <th scope="col">Time</th>
+                <th scope="col">Status</th>
+                <th scope="col">Source</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="appointments-table-body">
+            </tbody>
+          </table>
+        </div>
+        <template id="appointment-row-template">
+          <tr>
+            <td data-field="patient-name"></td>
+            <td data-field="phone"></td>
+            <td data-field="doctor"></td>
+            <td data-field="date"></td>
+            <td data-field="time"></td>
+            <td>
+              <select name="row-status" aria-label="Appointment Status">
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="no-show">No Show</option>
+              </select>
+            </td>
+            <td data-field="source"></td>
+            <td>
+              <button type="button" data-action="update-status">Update</button>
+            </td>
+          </tr>
+        </template>
+      </section>
+
+      <section id="manual-entry" aria-labelledby="manual-entry-title">
+        <h3 id="manual-entry-title">Manual Appointment Entry</h3>
+
+        <form id="manual-appointment-form" novalidate>
+          <div>
+            <label for="manual-patient-name">Patient Name</label>
+            <input type="text" id="manual-patient-name" name="patient-name" required />
+          </div>
+
+          <div>
+            <label for="manual-phone">Phone</label>
+            <input
+              type="tel"
+              id="manual-phone"
+              name="phone"
+              autocomplete="tel"
+              required
+            />
+          </div>
+
+          <div>
+            <label for="manual-doctor">Doctor</label>
+            <select id="manual-doctor" name="doctor" required>
+              <option value="">Select Doctor</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="manual-date">Date</label>
+            <input type="date" id="manual-date" name="date" required />
+          </div>
+
+          <div>
+            <label for="manual-time">Time</label>
+            <input type="time" id="manual-time" name="time" required />
+          </div>
+
+          <div>
+            <label for="manual-notes">Notes</label>
+            <textarea id="manual-notes" name="notes" rows="3"></textarea>
+          </div>
+
+          <button type="submit" id="manual-submit">Submit</button>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <script src="js/supabaseClient.js" defer></script>
+  <script src="js/admin.js" defer></script>
+</body>
+</html>
