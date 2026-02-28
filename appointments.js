@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const doctorSelect = document.getElementById('doctor') || document.getElementById('doctor_id');
   const patientNameInput = document.getElementById('patient-name') || document.getElementById('patient_name');
   const patientPhoneInput = document.getElementById('patient-phone') || document.getElementById('patient_phone');
+  const patientEmailInput = document.getElementById('patient-email') || document.getElementById('patient_email');
   const appointmentDateInput = document.getElementById('appointment-date') || document.getElementById('appointment_date');
   const appointmentTimeInput = document.getElementById('appointment-time') || document.getElementById('appointment_time');
   const notesInput = document.getElementById('notes');
@@ -349,6 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const patient_name = patientNameInput.value.trim();
     const patient_phone = patientPhoneInput.value.trim();
+    const patient_email = patientEmailInput ? patientEmailInput.value.trim() : '';
     const doctor_id = doctorSelect.value;
     const appointment_date = appointmentDateInput.value;
     const appointment_time = appointmentTimeInput.value.trim();
@@ -378,6 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const payload = {
         patient_name,
         patient_phone,
+        patient_email: patient_email || null,
         doctor_id,
         appointment_date,
         appointment_time,
