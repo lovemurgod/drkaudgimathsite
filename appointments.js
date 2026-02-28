@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const appointmentTimeInput = document.getElementById('appointment-time') || document.getElementById('appointment_time');
   const notesInput = document.getElementById('notes');
   const formMessage = document.getElementById('form-message');
+  const requestedDoctorName = getDoctorNameFromQuery();
 
   const supabaseClient =
     (window.supabaseClient && typeof window.supabaseClient.from === 'function' && window.supabaseClient) ||
@@ -92,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       populateDoctorOptions(Array.isArray(data) ? data : []);
+      applyRequestedDoctorSelection();
       applyDateConstraintsForSelectedDoctor();
       refreshAvailableTimeOptions();
     } catch (error) {
@@ -256,6 +258,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
       doctorSelect.appendChild(option);
     });
+  }
+
+  function getDoctorNameFromQuery() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const value = params.get('doctor');
+      return value ? value.trim() : '';
+    } catch (error) {
+      console.error('Error reading doctor from URL query:', error);
+      return '';
+    }
+  }
+
+  function applyRequestedDoctorSelection() {
+    if (!requestedDoctorName) {
+      return;
+    }
+
+    const requestedNormalized = normalizeDoctorName(requestedDoctorName);
+
+    for (let index = 0; index < doctorSelect.options.length; index += 1) {
+      const option = doctorSelect.options[index];
+      const optionDoctorName = option.dataset?.doctorName || option.textContent || '';
+
+      if (normalizeDoctorName(optionDoctorName) === requestedNormalized) {
+        doctorSelect.value = option.value;
+        return;
+      }
+    }
   }
 
   function refreshAvailableTimeOptions() {
