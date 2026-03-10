@@ -1,5 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const SESSION_KEY = 'admin_session';
+  const STAFF_ROLES = {
+    RECEPTIONIST: 'receptionist',
+    DOCTOR: 'doctor'
+  };
 
   const STATUS_OPTIONS = [
     { value: 'pending', label: 'Pending' },
@@ -17,6 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const loginView = document.getElementById('login-view');
   const dashboardView = document.getElementById('dashboard-view');
+  const loginTitle = document.getElementById('login-title');
+  const dashboardTitle = document.getElementById('dashboard-title');
 
   const loginForm = document.getElementById('login-form');
   const loginButton = document.getElementById('login-button');
@@ -34,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const appointmentRowTemplate = document.getElementById('appointment-row-template');
 
   const manualForm = document.getElementById('manual-appointment-form');
+  const manualEntrySection = document.getElementById('manual-entry');
   const manualPatientNameInput = document.getElementById('manual-patient-name');
   const manualPhoneInput = document.getElementById('manual-phone');
   const manualDoctorSelect = document.getElementById('manual-doctor');
@@ -52,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   let dashboardInitialized = false;
+  let currentStaffProfile = null;
 
   if (!supabaseClient) {
     if (loginMessage) {
@@ -99,16 +106,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function restoreSessionOnLoad() {
-    const sessionRaw = localStorage.getItem(SESSION_KEY);
+  async function restoreSessionOnLoad() {
+    try {
+      const { data, error } = await supabaseClient.auth.getSession();
 
-    if (!sessionRaw) {
+      if (error) {
+        throw error;
+      }
+
+      const session = data?.session || null;
+
+      if (!session) {
+        showLoginView();
+        applyRoleUiState();
+        return;
+      }
+
+      await startAuthenticatedSession(session);
+    } catch (error) {
+      console.error('Session restore error:', error);
+      await supabaseClient.auth.signOut();
+      currentStaffProfile = null;
+      dashboardInitialized = false;
       showLoginView();
-      return;
+      applyRoleUiState();
     }
-
-    showDashboardView();
-    initializeDashboard();
   }
 
   async function handleLoginSubmit(event) {
@@ -123,98 +145,95 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    try {
-      const matchedAdmin = await authenticateAdmin(email, password);
-
-      if (!matchedAdmin) {
-        setLoginMessage('Invalid email or password.');
-        return;
-      }
-
-      const sessionData = {
-        admin_id: matchedAdmin.id,
-        email: matchedAdmin.email,
-        login_at: new Date().toISOString()
-      };
-
-      localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-      showDashboardView();
-      initializeDashboard();
-    } catch (error) {
-      console.error('Login error:', error);
-      setLoginMessage('Unable to login right now. Please try again.');
-    }
-  }
-
-  async function authenticateAdmin(email, password) {
-    const normalizedEmail = normalizeEmail(email);
-    const attempts = [
-      { emailColumn: 'email', passwordColumn: 'password', idColumn: 'id' },
-      { emailColumn: 'admin_email', passwordColumn: 'admin_password', idColumn: 'admin_id' },
-      { emailColumn: 'email', passwordColumn: 'admin_password', idColumn: 'id' },
-      { emailColumn: 'admin_email', passwordColumn: 'password', idColumn: 'admin_id' }
-    ];
-
-    for (const attempt of attempts) {
-      const result = await tryAdminLookup(normalizedEmail, password, attempt);
-
-      if (result.success && result.admin) {
-        return result.admin;
-      }
-
-      if (result.fatalError) {
-        throw result.fatalError;
-      }
+    if (loginButton) {
+      loginButton.disabled = true;
+      loginButton.textContent = 'Logging in...';
     }
 
-    return null;
-  }
-
-  async function tryAdminLookup(email, password, attempt) {
     try {
-      const { data, error } = await supabaseClient
-        .from('admins')
-        .select('*')
-        .limit(50);
-
-      if (error) {
-        const code = String(error.code || '');
-        const message = String(error.message || '').toLowerCase();
-        const isMissingColumn = code === '42703' || message.includes('column') || message.includes('does not exist');
-
-        if (isMissingColumn) {
-          return { success: false, admin: null, fatalError: null };
-        }
-
-        return { success: false, admin: null, fatalError: error };
-      }
-
-      const rows = Array.isArray(data) ? data : [];
-
-      const matchedRow = rows.find((row) => {
-        const rowEmail = normalizeEmail(row?.[attempt.emailColumn]);
-        const rowPassword = String(row?.[attempt.passwordColumn] ?? '');
-        return rowEmail === email && rowPassword === password;
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
       });
 
-      if (!matchedRow) {
-        return { success: true, admin: null, fatalError: null };
+      if (error) {
+        throw error;
       }
 
-      const idValue = matchedRow?.[attempt.idColumn] ?? matchedRow?.id ?? matchedRow?.admin_id ?? null;
-      const emailValue = String(matchedRow?.[attempt.emailColumn] ?? matchedRow?.email ?? matchedRow?.admin_email ?? email).trim();
+      const session = data?.session || null;
 
-      return {
-        success: true,
-        admin: {
-          id: idValue,
-          email: emailValue
-        },
-        fatalError: null
-      };
+      if (!session) {
+        throw new Error('Unable to start a login session.');
+      }
+
+      await startAuthenticatedSession(session);
+
+      if (loginForm) {
+        loginForm.reset();
+      }
     } catch (error) {
-      return { success: false, admin: null, fatalError: error };
+      console.error('Login error:', error);
+      await supabaseClient.auth.signOut();
+      currentStaffProfile = null;
+      dashboardInitialized = false;
+      setLoginMessage(resolveLoginErrorMessage(error));
+      showLoginView();
+      applyRoleUiState();
+    } finally {
+      if (loginButton) {
+        loginButton.disabled = false;
+        loginButton.textContent = 'Login';
+      }
     }
+  }
+
+  async function startAuthenticatedSession(session) {
+    const user = session?.user || null;
+
+    if (!user?.id) {
+      throw new Error('Unable to load authenticated user.');
+    }
+
+    const staffProfile = await loadStaffProfile(user.id);
+
+    currentStaffProfile = staffProfile;
+    dashboardInitialized = false;
+
+    applyRoleUiState();
+    showDashboardView();
+    await initializeDashboard();
+  }
+
+  async function loadStaffProfile(userId) {
+    const { data, error } = await supabaseClient
+      .from('staff_profiles')
+      .select('role, doctor_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data) {
+      throw new Error('Your account is not assigned as receptionist or doctor.');
+    }
+
+    const role = normalizeRole(data.role);
+    const doctorId = String(data.doctor_id ?? '').trim();
+
+    if (!role) {
+      throw new Error('Your account role is invalid. Contact support.');
+    }
+
+    if (role === STAFF_ROLES.DOCTOR && !doctorId) {
+      throw new Error('Doctor account is missing an assigned doctor profile.');
+    }
+
+    return {
+      role,
+      doctorId
+    };
   }
 
   async function initializeDashboard() {
@@ -230,11 +249,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function loadDoctors() {
     try {
-      const { data, error } = await supabaseClient
+      let query = supabaseClient
         .from('doctors')
         .select('id, name')
         .eq('is_active', true)
         .order('name', { ascending: true });
+
+      if (isDoctorRole() && currentStaffProfile?.doctorId) {
+        query = query.eq('id', currentStaffProfile.doctorId);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         throw error;
@@ -255,6 +280,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     filterDoctorSelect.innerHTML = '';
 
+    if (isDoctorRole()) {
+      let hasAssignedDoctor = false;
+
+      doctors.forEach((doctor) => {
+        const option = document.createElement('option');
+        option.value = String(doctor.id);
+        option.textContent = doctor.name || '';
+        filterDoctorSelect.appendChild(option);
+
+        if (String(doctor.id) === String(currentStaffProfile?.doctorId || '')) {
+          hasAssignedDoctor = true;
+        }
+      });
+
+      if (!hasAssignedDoctor && currentStaffProfile?.doctorId) {
+        const fallbackOption = document.createElement('option');
+        fallbackOption.value = String(currentStaffProfile.doctorId);
+        fallbackOption.textContent = 'My Appointments';
+        filterDoctorSelect.appendChild(fallbackOption);
+      }
+
+      filterDoctorSelect.value = String(currentStaffProfile?.doctorId || '');
+      filterDoctorSelect.disabled = true;
+      return;
+    }
+
+    filterDoctorSelect.disabled = false;
+
     const allOption = document.createElement('option');
     allOption.value = '';
     allOption.textContent = 'All Doctors';
@@ -274,6 +327,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     manualDoctorSelect.innerHTML = '';
+
+    if (isDoctorRole()) {
+      const doctor = doctors[0] || null;
+      const option = document.createElement('option');
+      option.value = String(currentStaffProfile?.doctorId || '');
+      option.textContent = doctor?.name || 'Assigned Doctor';
+      manualDoctorSelect.appendChild(option);
+      manualDoctorSelect.value = String(currentStaffProfile?.doctorId || '');
+      manualDoctorSelect.disabled = true;
+      return;
+    }
+
+    manualDoctorSelect.disabled = false;
 
     const placeholderOption = document.createElement('option');
     placeholderOption.value = '';
@@ -303,7 +369,9 @@ document.addEventListener('DOMContentLoaded', () => {
         query = query.eq('appointment_date', selectedDate);
       }
 
-      if (selectedDoctor) {
+      if (isDoctorRole() && currentStaffProfile?.doctorId) {
+        query = query.eq('doctor_id', currentStaffProfile.doctorId);
+      } else if (selectedDoctor) {
         query = query.eq('doctor_id', selectedDoctor);
       }
 
@@ -394,6 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     row.dataset.appointmentId = String(appointment.id);
+    row.dataset.doctorId = String(appointment.doctor_id ?? '');
 
     const patientNameCell = row.querySelector('[data-field="patient-name"]');
     const phoneCell = row.querySelector('[data-field="phone"]');
@@ -402,6 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const timeCell = row.querySelector('[data-field="time"]');
     const sourceCell = row.querySelector('[data-field="source"]');
     const statusSelect = row.querySelector('select[name="row-status"]');
+    const updateButton = row.querySelector('button[data-action="update-status"]');
 
     if (patientNameCell) {
       patientNameCell.textContent = appointment.patient_name || '';
@@ -431,6 +501,14 @@ document.addEventListener('DOMContentLoaded', () => {
       statusSelect.value = mapStatusToValue(appointment.status || 'Pending');
     }
 
+    if (statusSelect && isDoctorRole()) {
+      statusSelect.disabled = String(appointment.doctor_id ?? '') !== String(currentStaffProfile?.doctorId || '');
+    }
+
+    if (updateButton && isDoctorRole()) {
+      updateButton.disabled = String(appointment.doctor_id ?? '') !== String(currentStaffProfile?.doctorId || '');
+    }
+
     return row;
   }
 
@@ -451,6 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const appointmentId = row.dataset.appointmentId;
+    const rowDoctorId = row.dataset.doctorId || '';
     const statusSelect = row.querySelector('select[name="row-status"]');
     const statusValue = statusSelect?.value || '';
 
@@ -458,14 +537,28 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    if (isDoctorRole() && String(currentStaffProfile?.doctorId || '') !== String(rowDoctorId)) {
+      return;
+    }
+
     try {
-      const { error } = await supabaseClient
+      let mutation = supabaseClient
         .from('appointments')
         .update({ status: mapStatusToDb(statusValue) })
         .eq('id', appointmentId);
 
+      if (isDoctorRole() && currentStaffProfile?.doctorId) {
+        mutation = mutation.eq('doctor_id', currentStaffProfile.doctorId);
+      }
+
+      const { data, error } = await mutation.select('id');
+
       if (error) {
         throw error;
+      }
+
+      if (isDoctorRole() && (!Array.isArray(data) || data.length === 0)) {
+        throw new Error('You can update only your own appointments.');
       }
 
       await loadAppointments();
@@ -477,6 +570,11 @@ document.addEventListener('DOMContentLoaded', () => {
   async function handleManualAppointmentSubmit(event) {
     event.preventDefault();
     setManualFormMessage('');
+
+    if (!isReceptionistRole()) {
+      setManualFormMessage('Only receptionist accounts can create manual appointments.', 'error');
+      return;
+    }
 
     const patientName = (manualPatientNameInput?.value || '').trim();
     const phone = (manualPhoneInput?.value || '').trim();
@@ -527,9 +625,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function handleLogout() {
-    localStorage.removeItem(SESSION_KEY);
+  async function handleLogout() {
+    try {
+      await supabaseClient.auth.signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+
+    currentStaffProfile = null;
+    dashboardInitialized = false;
     showLoginView();
+    applyRoleUiState();
+
+    renderAppointments([]);
 
     if (loginForm) {
       loginForm.reset();
@@ -589,6 +697,66 @@ document.addEventListener('DOMContentLoaded', () => {
     manualFormMessage.style.color = type === 'success' ? '#1f7a1f' : '#b71f1f';
   }
 
+  function applyRoleUiState() {
+    const isDoctor = isDoctorRole();
+
+    if (loginTitle) {
+      loginTitle.textContent = 'Staff Login';
+    }
+
+    if (dashboardTitle) {
+      dashboardTitle.textContent = isDoctor ? 'Doctor Dashboard' : 'Reception Dashboard';
+    }
+
+    if (manualEntrySection) {
+      manualEntrySection.hidden = isDoctor;
+    }
+  }
+
+  function normalizeRole(value) {
+    const normalizedValue = String(value || '').trim().toLowerCase();
+
+    if (normalizedValue === STAFF_ROLES.RECEPTIONIST) {
+      return STAFF_ROLES.RECEPTIONIST;
+    }
+
+    if (normalizedValue === STAFF_ROLES.DOCTOR) {
+      return STAFF_ROLES.DOCTOR;
+    }
+
+    return '';
+  }
+
+  function isDoctorRole() {
+    return currentStaffProfile?.role === STAFF_ROLES.DOCTOR;
+  }
+
+  function isReceptionistRole() {
+    return currentStaffProfile?.role === STAFF_ROLES.RECEPTIONIST;
+  }
+
+  function resolveLoginErrorMessage(error) {
+    const message = String(error?.message || '').toLowerCase();
+
+    if (message.includes('invalid login credentials')) {
+      return 'Invalid email or password.';
+    }
+
+    if (message.includes('email not confirmed')) {
+      return 'Email is not confirmed for this account.';
+    }
+
+    if (message.includes('not assigned as receptionist or doctor')) {
+      return 'Your account is not assigned as receptionist or doctor.';
+    }
+
+    if (message.includes('missing an assigned doctor profile')) {
+      return 'Doctor account is missing assigned doctor profile.';
+    }
+
+    return 'Unable to login right now. Please try again.';
+  }
+
   function mapStatusToDb(value) {
     const normalizedValue = String(value || '').trim().toLowerCase();
 
@@ -601,10 +769,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     return normalizedValue.charAt(0).toUpperCase() + normalizedValue.slice(1);
-  }
-
-  function normalizeEmail(value) {
-    return String(value ?? '').trim().toLowerCase();
   }
 
   function mapStatusToValue(value) {
