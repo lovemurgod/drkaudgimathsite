@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     RECEPTIONIST: 'receptionist',
     DOCTOR: 'doctor'
   };
+  const USERNAME_EMAIL_DOMAIN = 'staff.local';
 
   const STATUS_OPTIONS = [
     { value: 'pending', label: 'Pending' },
@@ -137,11 +138,12 @@ document.addEventListener('DOMContentLoaded', () => {
     event.preventDefault();
     clearLoginMessage();
 
-    const email = (emailInput?.value || '').trim();
+    const loginIdentifier = (emailInput?.value || '').trim();
+    const email = resolveAuthEmail(loginIdentifier);
     const password = passwordInput?.value || '';
 
-    if (!email || !password) {
-      setLoginMessage('Please enter email and password.');
+    if (!loginIdentifier || !password) {
+      setLoginMessage('Please enter username/email and password.');
       return;
     }
 
@@ -755,6 +757,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     return 'Unable to login right now. Please try again.';
+  }
+
+  function resolveAuthEmail(identifier) {
+    const normalizedIdentifier = String(identifier || '').trim().toLowerCase();
+
+    if (!normalizedIdentifier) {
+      return '';
+    }
+
+    if (normalizedIdentifier.includes('@')) {
+      return normalizedIdentifier;
+    }
+
+    const username = normalizedIdentifier.replace(/[^a-z0-9]/g, '');
+    return `${username}@${USERNAME_EMAIL_DOMAIN}`;
   }
 
   function mapStatusToDb(value) {
