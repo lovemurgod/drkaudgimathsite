@@ -291,6 +291,18 @@ p {
   color: var(--color-primary-dark);
 }
 
+.primary-nav__list a.button--primary,
+.primary-nav__list a.button--primary:focus-visible {
+  background: var(--color-primary);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.primary-nav__list a.button--primary:hover {
+  background: var(--color-primary-dark);
+  color: #ffffff;
+}
+
 .primary-nav__list .button {
   margin-left: 0;
 }
