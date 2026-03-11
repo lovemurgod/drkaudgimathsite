@@ -961,15 +961,6 @@ p {
 }
 
 @media (max-width: 767px) {
-  .primary-nav__ambulance {
-    flex: 1 1 100%;
-  }
-
-  .primary-nav__ambulance .button {
-    width: 100%;
-    justify-content: center;
-  }
-
   .legacy__image {
     object-position: center top;
   }
@@ -1014,21 +1005,6 @@ p {
 
   .primary-nav__list .button {
     margin-left: 0;
-  }
-
-  .primary-nav__ambulance {
-    margin-left: auto;
-  }
-
-  .primary-nav__ambulance .button--emergency {
-    width: 88px;
-    min-height: 88px;
-    padding: 0.45rem;
-    border-radius: 8px;
-    justify-content: center;
-    text-align: center;
-    white-space: normal;
-    line-height: 1.1;
   }
 
   .hero__grid {
