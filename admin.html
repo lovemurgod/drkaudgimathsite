@@ -47,7 +47,7 @@
         <button type="button" id="logout-button">Logout</button>
       </header>
 
-      <section aria-labelledby="filters-title">
+      <section id="filters-section" aria-labelledby="filters-title">
         <h3 id="filters-title">Filters</h3>
         <form id="filters-form" novalidate>
           <div>
@@ -76,7 +76,7 @@
         </form>
       </section>
 
-      <section aria-labelledby="appointments-title">
+      <section id="appointments-section" aria-labelledby="appointments-title">
         <h3 id="appointments-title">Appointments</h3>
         <div class="table-responsive">
           <table>
@@ -116,6 +116,49 @@
             <td data-field="source"></td>
             <td>
               <button type="button" data-action="update-status">Update</button>
+            </td>
+          </tr>
+        </template>
+      </section>
+
+      <section id="complaints-section" aria-labelledby="complaints-title" hidden>
+        <h3 id="complaints-title">Complaints</h3>
+        <div class="table-responsive">
+          <table>
+            <caption class="sr-only">Hospital complaints list</caption>
+            <thead>
+              <tr>
+                <th scope="col">Occurred Date</th>
+                <th scope="col">Occurred Time</th>
+                <th scope="col">Nature</th>
+                <th scope="col">Details</th>
+                <th scope="col">Reporter</th>
+                <th scope="col">Reported At</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="complaints-table-body"></tbody>
+          </table>
+        </div>
+        <template id="complaint-row-template">
+          <tr>
+            <td data-field="incident-date"></td>
+            <td data-field="incident-time"></td>
+            <td data-field="incident-nature"></td>
+            <td data-field="incident-details"></td>
+            <td data-field="reporter"></td>
+            <td data-field="reported-at"></td>
+            <td>
+              <select name="complaint-status" aria-label="Complaint Status">
+                <option value="new">New</option>
+                <option value="investigating">Investigating</option>
+                <option value="resolved">Resolved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </td>
+            <td>
+              <button type="button" data-action="update-complaint-status">Update</button>
             </td>
           </tr>
         </template>

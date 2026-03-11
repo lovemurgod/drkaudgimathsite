@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
   const STAFF_ROLES = {
     RECEPTIONIST: 'receptionist',
-    DOCTOR: 'doctor'
+    DOCTOR: 'doctor',
+    MANAGEMENT: 'management'
   };
   const USERNAME_EMAIL_DOMAIN = 'staff.local';
 
@@ -11,6 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
     { value: 'completed', label: 'Completed' },
     { value: 'cancelled', label: 'Cancelled' },
     { value: 'no-show', label: 'No Show' }
+  ];
+
+  const COMPLAINT_STATUS_OPTIONS = [
+    { value: 'new', label: 'New' },
+    { value: 'investigating', label: 'Investigating' },
+    { value: 'resolved', label: 'Resolved' },
+    { value: 'rejected', label: 'Rejected' }
   ];
 
   const supabaseClient =
@@ -35,9 +43,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const filterDateInput = document.getElementById('filter-date');
   const filterDoctorSelect = document.getElementById('filter-doctor');
   const filterStatusSelect = document.getElementById('filter-status');
+  const filtersSection = document.getElementById('filters-section');
+  const appointmentsSection = document.getElementById('appointments-section');
 
   const appointmentsTableBody = document.getElementById('appointments-table-body');
   const appointmentRowTemplate = document.getElementById('appointment-row-template');
+
+  const complaintsSection = document.getElementById('complaints-section');
+  const complaintsTableBody = document.getElementById('complaints-table-body');
+  const complaintRowTemplate = document.getElementById('complaint-row-template');
 
   const manualForm = document.getElementById('manual-appointment-form');
   const manualEntrySection = document.getElementById('manual-entry');
@@ -100,6 +114,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (appointmentsTableBody) {
       appointmentsTableBody.addEventListener('click', handleAppointmentAction);
+    }
+
+    if (complaintsTableBody) {
+      complaintsTableBody.addEventListener('click', handleComplaintAction);
     }
 
     if (manualForm) {
@@ -218,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (!data) {
-      throw new Error('Your account is not assigned as receptionist or doctor.');
+      throw new Error('Your account is not assigned as receptionist, doctor, or management.');
     }
 
     const role = normalizeRole(data.role);
@@ -240,7 +258,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function initializeDashboard() {
     if (dashboardInitialized) {
-      await loadAppointments();
+      if (isManagementRole()) {
+        await loadComplaints();
+      } else {
+        await loadAppointments();
+      }
+      return;
+    }
+
+    if (isManagementRole()) {
+      await loadComplaints();
+      dashboardInitialized = true;
       return;
     }
 
@@ -357,6 +385,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function loadAppointments() {
+    if (isManagementRole()) {
+      renderAppointments([]);
+      return;
+    }
+
     try {
       let query = supabaseClient
         .from('appointments')
@@ -515,6 +548,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function handleAppointmentAction(event) {
+    if (isManagementRole()) {
+      return;
+    }
+
     const target = event.target;
 
     if (!(target instanceof HTMLElement)) {
@@ -640,6 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
     applyRoleUiState();
 
     renderAppointments([]);
+    renderComplaints([]);
 
     if (loginForm) {
       loginForm.reset();
@@ -701,17 +739,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function applyRoleUiState() {
     const isDoctor = isDoctorRole();
+    const isManagement = isManagementRole();
 
     if (loginTitle) {
       loginTitle.textContent = 'Staff Login';
     }
 
     if (dashboardTitle) {
-      dashboardTitle.textContent = isDoctor ? 'Doctor Dashboard' : 'Reception Dashboard';
+      if (isDoctor) {
+        dashboardTitle.textContent = 'Doctor Dashboard';
+      } else if (isManagement) {
+        dashboardTitle.textContent = 'Management Dashboard';
+      } else {
+        dashboardTitle.textContent = 'Reception Dashboard';
+      }
     }
 
     if (manualEntrySection) {
-      manualEntrySection.hidden = isDoctor;
+      manualEntrySection.hidden = isDoctor || isManagement;
+    }
+
+    if (filtersSection) {
+      filtersSection.hidden = isManagement;
+    }
+
+    if (appointmentsSection) {
+      appointmentsSection.hidden = isManagement;
+    }
+
+    if (complaintsSection) {
+      complaintsSection.hidden = !isManagement;
     }
   }
 
@@ -726,6 +783,10 @@ document.addEventListener('DOMContentLoaded', () => {
       return STAFF_ROLES.DOCTOR;
     }
 
+    if (normalizedValue === STAFF_ROLES.MANAGEMENT) {
+      return STAFF_ROLES.MANAGEMENT;
+    }
+
     return '';
   }
 
@@ -735,6 +796,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function isReceptionistRole() {
     return currentStaffProfile?.role === STAFF_ROLES.RECEPTIONIST;
+  }
+
+  function isManagementRole() {
+    return currentStaffProfile?.role === STAFF_ROLES.MANAGEMENT;
   }
 
   function resolveLoginErrorMessage(error) {
@@ -748,8 +813,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return 'Email is not confirmed for this account.';
     }
 
-    if (message.includes('not assigned as receptionist or doctor')) {
-      return 'Your account is not assigned as receptionist or doctor.';
+    if (message.includes('not assigned as receptionist, doctor, or management')) {
+      return 'Your account is not assigned as receptionist, doctor, or management.';
     }
 
     if (message.includes('missing an assigned doctor profile')) {
@@ -816,5 +881,231 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     return '';
+  }
+
+  async function loadComplaints() {
+    if (!isManagementRole()) {
+      renderComplaints([]);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabaseClient
+        .from('complaints')
+        .select('id, reporter_name, reporter_phone, reporter_email, incident_date, incident_time, incident_nature, incident_details, status, created_at')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      renderComplaints(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error loading complaints:', error);
+      renderComplaints([]);
+    }
+  }
+
+  function renderComplaints(complaints) {
+    if (!complaintsTableBody) {
+      return;
+    }
+
+    complaintsTableBody.innerHTML = '';
+
+    complaints.forEach((complaint) => {
+      const row = buildComplaintRow(complaint);
+      complaintsTableBody.appendChild(row);
+    });
+  }
+
+  function buildComplaintRow(complaint) {
+    let row;
+
+    if (complaintRowTemplate && 'content' in complaintRowTemplate) {
+      const fragment = complaintRowTemplate.content.cloneNode(true);
+      row = fragment.querySelector('tr');
+    }
+
+    if (!row) {
+      row = document.createElement('tr');
+    }
+
+    row.dataset.complaintId = String(complaint.id ?? '');
+
+    const incidentDateCell = row.querySelector('[data-field="incident-date"]');
+    const incidentTimeCell = row.querySelector('[data-field="incident-time"]');
+    const incidentNatureCell = row.querySelector('[data-field="incident-nature"]');
+    const incidentDetailsCell = row.querySelector('[data-field="incident-details"]');
+    const reporterCell = row.querySelector('[data-field="reporter"]');
+    const reportedAtCell = row.querySelector('[data-field="reported-at"]');
+    const statusSelect = row.querySelector('select[name="complaint-status"]');
+    const updateButton = row.querySelector('button[data-action="update-complaint-status"]');
+
+    if (incidentDateCell) {
+      incidentDateCell.textContent = complaint.incident_date || '';
+    }
+
+    if (incidentTimeCell) {
+      incidentTimeCell.textContent = formatIncidentTime(complaint.incident_time);
+    }
+
+    if (incidentNatureCell) {
+      incidentNatureCell.textContent = complaint.incident_nature || '';
+    }
+
+    if (incidentDetailsCell) {
+      incidentDetailsCell.textContent = complaint.incident_details || '';
+    }
+
+    if (reporterCell) {
+      reporterCell.textContent = buildReporterText(complaint);
+    }
+
+    if (reportedAtCell) {
+      reportedAtCell.textContent = formatReportedAt(complaint.created_at);
+    }
+
+    if (statusSelect) {
+      statusSelect.value = mapComplaintStatusToValue(complaint.status || 'New');
+      statusSelect.disabled = !isManagementRole();
+    }
+
+    if (updateButton) {
+      updateButton.disabled = !isManagementRole();
+    }
+
+    return row;
+  }
+
+  async function handleComplaintAction(event) {
+    const target = event.target;
+
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    if (target.dataset.action !== 'update-complaint-status') {
+      return;
+    }
+
+    if (!isManagementRole()) {
+      return;
+    }
+
+    const row = target.closest('tr');
+    if (!row) {
+      return;
+    }
+
+    const complaintId = row.dataset.complaintId;
+    const statusSelect = row.querySelector('select[name="complaint-status"]');
+    const statusValue = statusSelect?.value || '';
+
+    if (!complaintId || !statusValue) {
+      return;
+    }
+
+    try {
+      const { error } = await supabaseClient
+        .from('complaints')
+        .update({
+          status: mapComplaintStatusToDb(statusValue),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', complaintId);
+
+      if (error) {
+        throw error;
+      }
+
+      await loadComplaints();
+    } catch (error) {
+      console.error('Error updating complaint status:', error);
+    }
+  }
+
+  function mapComplaintStatusToDb(value) {
+    const normalizedValue = String(value || '').trim().toLowerCase();
+
+    const matchedStatus = COMPLAINT_STATUS_OPTIONS.find((statusOption) => statusOption.value === normalizedValue);
+    if (!matchedStatus) {
+      return 'New';
+    }
+
+    return matchedStatus.label;
+  }
+
+  function mapComplaintStatusToValue(value) {
+    const normalizedValue = String(value || '').trim().toLowerCase();
+
+    if (!normalizedValue) {
+      return 'new';
+    }
+
+    const matchedStatus = COMPLAINT_STATUS_OPTIONS.find((statusOption) => statusOption.value === normalizedValue || statusOption.label.toLowerCase() === normalizedValue);
+    return matchedStatus ? matchedStatus.value : 'new';
+  }
+
+  function formatIncidentTime(value) {
+    const text = String(value || '').trim();
+    if (!text) {
+      return '';
+    }
+
+    const normalized = text.length >= 5 ? text.slice(0, 5) : text;
+    const [hoursText, minutesText] = normalized.split(':');
+    const hours = Number(hoursText);
+    const minutes = Number(minutesText || '0');
+
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+      return text;
+    }
+
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hours12 = ((hours + 11) % 12) + 1;
+    return `${hours12}:${String(minutes).padStart(2, '0')} ${period}`;
+  }
+
+  function formatReportedAt(value) {
+    if (!value) {
+      return '';
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return String(value);
+    }
+
+    return date.toLocaleString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  function buildReporterText(complaint) {
+    const parts = [];
+
+    const name = String(complaint?.reporter_name || '').trim();
+    const phone = String(complaint?.reporter_phone || '').trim();
+    const email = String(complaint?.reporter_email || '').trim();
+
+    if (name) {
+      parts.push(name);
+    }
+
+    if (phone) {
+      parts.push(phone);
+    }
+
+    if (email) {
+      parts.push(email);
+    }
+
+    return parts.length ? parts.join(' | ') : 'Anonymous';
   }
 });

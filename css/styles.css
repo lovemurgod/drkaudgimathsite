@@ -528,6 +528,33 @@ p {
   box-shadow: 0 6px 14px rgba(13, 50, 77, 0.06);
 }
 
+.complaint-cta {
+  background: linear-gradient(120deg, rgba(0, 151, 178, 0.15), rgba(244, 248, 251, 0.8));
+}
+
+.complaint-cta__inner {
+  display: grid;
+  gap: 0.85rem;
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 22px var(--color-shadow);
+  padding: 1rem;
+}
+
+.complaint-cta h2 {
+  margin-bottom: 0.35rem;
+}
+
+.complaint-cta p {
+  margin-bottom: 0;
+}
+
+.complaint-cta .button {
+  width: 100%;
+}
+
 .contact {
   background: #edf6fa;
 }
@@ -599,11 +626,13 @@ p {
   padding: 0.2rem;
 }
 
-.appointment-page .appointment-section {
+.appointment-page .appointment-section,
+.complaint-page .appointment-section {
   background: linear-gradient(180deg, #edf6fa 0%, #f8fcff 100%);
 }
 
-.appointment-page .appointment-card {
+.appointment-page .appointment-card,
+.complaint-page .appointment-card {
   width: min(100%, 760px);
   margin-inline: auto;
   background: var(--color-surface);
@@ -613,7 +642,8 @@ p {
   padding: 1.25rem;
 }
 
-.appointment-page #appointment-title {
+.appointment-page #appointment-title,
+.complaint-page #complaint-title {
   margin-bottom: 0.55rem;
 }
 
@@ -621,7 +651,8 @@ p {
   margin-bottom: 1.2rem;
 }
 
-.appointment-page #appointment-form {
+.appointment-page #appointment-form,
+.complaint-page #complaint-form {
   display: grid;
   gap: 0.95rem;
 }
@@ -638,7 +669,10 @@ p {
 
 .appointment-page #appointment-form input,
 .appointment-page #appointment-form select,
-.appointment-page #appointment-form textarea {
+.appointment-page #appointment-form textarea,
+.complaint-page #complaint-form input,
+.complaint-page #complaint-form select,
+.complaint-page #complaint-form textarea {
   width: 100%;
   border: 1px solid var(--color-border);
   border-radius: 8px;
@@ -648,14 +682,18 @@ p {
   font: inherit;
 }
 
-.appointment-page #appointment-form textarea {
+.appointment-page #appointment-form textarea,
+.complaint-page #complaint-form textarea {
   resize: vertical;
   min-height: 112px;
 }
 
 .appointment-page #appointment-form input:focus,
 .appointment-page #appointment-form select:focus,
-.appointment-page #appointment-form textarea:focus {
+.appointment-page #appointment-form textarea:focus,
+.complaint-page #complaint-form input:focus,
+.complaint-page #complaint-form select:focus,
+.complaint-page #complaint-form textarea:focus {
   outline: 3px solid rgba(0, 151, 178, 0.2);
   outline-offset: 1px;
   border-color: var(--color-primary);
@@ -849,6 +887,7 @@ p {
 
 .admin-page #filters-title,
 .admin-page #appointments-title,
+.admin-page #complaints-title,
 .admin-page #manual-entry-title {
   margin-bottom: 0.95rem;
   font-size: 1.15rem;
@@ -903,6 +942,10 @@ p {
 
 .admin-page td select[name='row-status'] {
   min-width: 138px;
+}
+
+.admin-page td select[name='complaint-status'] {
+  min-width: 148px;
 }
 
 .admin-page [data-action='update-status'] {
@@ -1004,6 +1047,16 @@ p {
     align-items: start;
   }
 
+  .complaint-cta__inner {
+    grid-template-columns: 1fr auto;
+    padding: 1.2rem 1.3rem;
+  }
+
+  .complaint-cta .button {
+    width: auto;
+    min-width: 220px;
+  }
+
   .doctors__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: stretch;
@@ -1016,19 +1069,24 @@ p {
     gap: 1rem;
   }
 
-  .appointment-page .appointment-card {
+  .appointment-page .appointment-card,
+  .complaint-page .appointment-card {
     padding: 1.7rem;
   }
 
-  .appointment-page #appointment-form {
+  .appointment-page #appointment-form,
+  .complaint-page #complaint-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 1rem;
     row-gap: 1rem;
   }
 
   .appointment-page .appointment-form__field,
+  .complaint-page .appointment-form__field,
   .appointment-page .appointment-form__actions,
-  .appointment-page .appointment-form__message {
+  .complaint-page .appointment-form__actions,
+  .appointment-page .appointment-form__message,
+  .complaint-page .appointment-form__message {
     grid-column: 1 / -1;
   }
 
