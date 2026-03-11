@@ -8,19 +8,27 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body class="appointment-page">
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a class="skip-link" href="#main-content" data-i18n="common.skipToMain">Skip to main content</a>
 
-  <header class="site-header" aria-label="Main header">
+  <header class="site-header" aria-label="Main header" data-i18n-attr="aria-label:common.mainHeaderAria">
     <div class="container site-header__inner">
-      <a class="brand" href="index.html" aria-label="Dr. R. G. Karudagimath Memorial Nursing Home home">
-        <img src="Assets/images/Logo.png" alt="Dr. R. G. Karudagimath Memorial Nursing Home logo" class="brand__logo" />
-        <span class="brand__name">Dr. R. G. Karudagimath Memorial Nursing Home</span>
+      <a class="brand" href="index.html" aria-label="Dr. R. G. Karudagimath Memorial Nursing Home home" data-i18n-attr="aria-label:common.brandHomeAria">
+        <img src="Assets/images/Logo.png" alt="Dr. R. G. Karudagimath Memorial Nursing Home logo" class="brand__logo" data-i18n-attr="alt:common.logoAlt" />
+        <span class="brand__name" data-i18n="common.brandName">Dr. R. G. Karudagimath Memorial Nursing Home</span>
       </a>
 
-      <nav class="primary-nav" aria-label="Primary navigation">
+      <nav class="primary-nav" aria-label="Primary navigation" data-i18n-attr="aria-label:common.primaryNavigationAria">
         <ul class="primary-nav__list">
-          <li><a href="index.html">Home</a></li>
-          <li><a href="tel:+919740978768" class="button button--small button--emergency" aria-label="Call ambulance now">Call Ambulance Now</a></li>
+          <li><a href="index.html" data-i18n="common.home">Home</a></li>
+          <li class="language-control">
+            <label class="language-control__label" data-language-label for="language-selector-appointment">Language:</label>
+            <select id="language-selector-appointment" class="language-control__select" data-language-selector aria-label="Language selector" data-i18n-attr="aria-label:common.languageSelectorAria">
+              <option value="en">English</option>
+              <option value="hi">Hindi</option>
+              <option value="kn">Kannada</option>
+            </select>
+          </li>
+          <li><a href="tel:+919740978768" class="button button--small button--emergency" aria-label="Call ambulance now" data-i18n="nav.callAmbulanceNow" data-i18n-attr="aria-label:common.callAmbulanceAria">Call Ambulance Now</a></li>
         </ul>
       </nav>
     </div>
@@ -30,57 +38,57 @@
     <section class="appointment-section" aria-labelledby="appointment-title">
       <div class="container">
         <div class="appointment-card">
-          <h1 id="appointment-title">Book an Appointment</h1>
-          <p class="appointment-intro">Please fill in your details. Our team will contact you to confirm your appointment.</p>
+          <h1 id="appointment-title" data-i18n="appointment.pageTitle">Book an Appointment</h1>
+          <p class="appointment-intro" data-i18n="appointment.pageIntro">Please fill in your details. Our team will contact you to confirm your appointment.</p>
 
           <form id="appointment-form" novalidate>
             <div class="appointment-form__field">
-              <label for="patient_name">Patient Name *</label>
+              <label for="patient_name" data-i18n="appointment.field.patientName">Patient Name *</label>
               <input type="text" id="patient_name" name="patient_name" required autocomplete="name" />
             </div>
 
             <div class="appointment-form__field">
-              <label for="patient_phone">Phone Number *</label>
+              <label for="patient_phone" data-i18n="appointment.field.phoneNumber">Phone Number *</label>
               <input type="tel" id="patient_phone" name="patient_phone" required autocomplete="tel" />
             </div>
 
             <div class="appointment-form__field">
-              <label for="patient_email">Email</label>
+              <label for="patient_email" data-i18n="appointment.field.email">Email</label>
               <input type="email" id="patient_email" name="patient_email" autocomplete="email" />
             </div>
 
             <div class="appointment-form__field">
-              <label for="doctor_id">Select Doctor *</label>
+              <label for="doctor_id" data-i18n="appointment.field.selectDoctor">Select Doctor *</label>
               <select id="doctor_id" name="doctor_id" required>
-                <option value="">Loading doctors...</option>
+                <option value="" data-i18n="appointment.loadingDoctors">Loading doctors...</option>
               </select>
             </div>
 
             <div class="appointment-form__field appointment-form__field--half">
-              <label for="appointment_date">Appointment Date *</label>
+              <label for="appointment_date" data-i18n="appointment.field.appointmentDate">Appointment Date *</label>
               <input type="date" id="appointment_date" name="appointment_date" required />
             </div>
 
             <div class="appointment-form__field appointment-form__field--half">
-              <label for="appointment_time">Appointment Time *</label>
+              <label for="appointment_time" data-i18n="appointment.field.appointmentTime">Appointment Time *</label>
               <select id="appointment_time" name="appointment_time" required>
-                <option value="">Select doctor and date first</option>
+                <option value="" data-i18n="appointment.selectDoctorAndDateFirst">Select doctor and date first</option>
               </select>
             </div>
 
             <div class="appointment-form__field">
-              <label for="notes">Notes (Optional)</label>
-              <textarea id="notes" name="notes" rows="4" placeholder="Add any symptoms or additional information"></textarea>
+              <label for="notes" data-i18n="appointment.field.notes">Notes (Optional)</label>
+              <textarea id="notes" name="notes" rows="4" placeholder="Add any symptoms or additional information" data-i18n-attr="placeholder:appointment.notesPlaceholder"></textarea>
             </div>
 
             <div class="appointment-form__actions">
-              <button type="submit" class="button button--primary">Submit Appointment Request</button>
+              <button type="submit" class="button button--primary" data-i18n="appointment.submitRequest">Submit Appointment Request</button>
             </div>
 
             <p id="form-message" class="appointment-form__message" role="status" aria-live="polite"></p>
           </form>
 
-          <p class="appointment-help-text"><strong>We are here to help</strong></p>
+          <p class="appointment-help-text"><strong data-i18n="appointment.helpText">We are here to help</strong></p>
         </div>
       </div>
     </section>
@@ -88,14 +96,15 @@
 
   <footer class="site-footer">
     <div class="container site-footer__inner">
-      <img src="Assets/images/Logo.png" alt="Dr. R. G. Karudagimath Memorial Nursing Home footer logo" class="site-footer__logo" />
-      <p>Dr. R. G. Karudagimath Memorial Nursing Home, Badami</p>
-      <p>&copy; <span>2026</span> All rights reserved.</p>
+      <img src="Assets/images/Logo.png" alt="Dr. R. G. Karudagimath Memorial Nursing Home footer logo" class="site-footer__logo" data-i18n-attr="alt:common.footerLogoAlt" />
+      <p data-i18n="common.hospitalNameBadami">Dr. R. G. Karudagimath Memorial Nursing Home, Badami</p>
+      <p>&copy; <span>2026</span> <span data-i18n="common.allRightsReserved">All rights reserved.</span></p>
     </div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+  <script src="i18n.js" defer></script>
   <script src="supabaseClient.js" defer></script>
   <script src="appointments.js" defer></script>
 </body>

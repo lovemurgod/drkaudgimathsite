@@ -1,4 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const i18n = window.siteI18n;
+
+  function translate(key, fallback, vars) {
+    if (!i18n || typeof i18n.t !== 'function') {
+      return fallback;
+    }
+
+    const translated = i18n.t(key, vars);
+    return translated === key ? fallback : translated;
+  }
+
   const STAFF_ROLES = {
     RECEPTIONIST: 'receptionist',
     DOCTOR: 'doctor',
@@ -7,18 +18,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const USERNAME_EMAIL_DOMAIN = 'staff.local';
 
   const STATUS_OPTIONS = [
-    { value: 'pending', label: 'Pending' },
-    { value: 'confirmed', label: 'Confirmed' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'cancelled', label: 'Cancelled' },
-    { value: 'no-show', label: 'No Show' }
+    { value: 'pending', dbLabel: 'Pending', labelKey: 'admin.status.pending' },
+    { value: 'confirmed', dbLabel: 'Confirmed', labelKey: 'admin.status.confirmed' },
+    { value: 'completed', dbLabel: 'Completed', labelKey: 'admin.status.completed' },
+    { value: 'cancelled', dbLabel: 'Cancelled', labelKey: 'admin.status.cancelled' },
+    { value: 'no-show', dbLabel: 'No Show', labelKey: 'admin.status.noShow' }
   ];
 
   const COMPLAINT_STATUS_OPTIONS = [
-    { value: 'new', label: 'New' },
-    { value: 'investigating', label: 'Investigating' },
-    { value: 'resolved', label: 'Resolved' },
-    { value: 'rejected', label: 'Rejected' }
+    { value: 'new', dbLabel: 'New', labelKey: 'admin.complaintStatus.new' },
+    { value: 'investigating', dbLabel: 'Investigating', labelKey: 'admin.complaintStatus.investigating' },
+    { value: 'resolved', dbLabel: 'Resolved', labelKey: 'admin.complaintStatus.resolved' },
+    { value: 'rejected', dbLabel: 'Rejected', labelKey: 'admin.complaintStatus.rejected' }
   ];
 
   const supabaseClient =
@@ -77,13 +88,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (!supabaseClient) {
     if (loginMessage) {
-      loginMessage.textContent = 'Unable to connect to the database.';
+      loginMessage.textContent = translate('admin.dbUnavailable', 'Unable to connect to the database.');
     }
     return;
   }
 
   bindEvents();
+  window.addEventListener('app:language-changed', handleLanguageChange);
   restoreSessionOnLoad();
+
+  function handleLanguageChange() {
+    applyRoleUiState();
+
+    if (loginButton && !loginButton.disabled) {
+      loginButton.textContent = translate('admin.login', 'Login');
+    }
+
+    if (manualSubmitButton && !manualSubmitButton.disabled) {
+      manualSubmitButton.textContent = translate('admin.submit', 'Submit');
+    }
+
+    if (manualFormMessage && manualFormMessage.textContent) {
+      setManualFormMessage('', undefined);
+    }
+
+    if (!currentStaffProfile) {
+      return;
+    }
+
+    if (isManagementRole()) {
+      loadComplaints();
+      return;
+    }
+
+    loadDoctors();
+    loadAppointments();
+  }
 
   function bindEvents() {
     if (loginForm) {
@@ -161,13 +201,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const password = passwordInput?.value || '';
 
     if (!loginIdentifier || !password) {
-      setLoginMessage('Please enter username/email and password.');
+      setLoginMessage(translate('admin.enterCredentials', 'Please enter username/email and password.'));
       return;
     }
 
     if (loginButton) {
       loginButton.disabled = true;
-      loginButton.textContent = 'Logging in...';
+      loginButton.textContent = translate('admin.loggingIn', 'Logging in...');
     }
 
     try {
@@ -202,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally {
       if (loginButton) {
         loginButton.disabled = false;
-        loginButton.textContent = 'Login';
+        loginButton.textContent = translate('admin.login', 'Login');
       }
     }
   }
@@ -327,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!hasAssignedDoctor && currentStaffProfile?.doctorId) {
         const fallbackOption = document.createElement('option');
         fallbackOption.value = String(currentStaffProfile.doctorId);
-        fallbackOption.textContent = 'My Appointments';
+        fallbackOption.textContent = translate('admin.myAppointments', 'My Appointments');
         filterDoctorSelect.appendChild(fallbackOption);
       }
 
@@ -340,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const allOption = document.createElement('option');
     allOption.value = '';
-    allOption.textContent = 'All Doctors';
+    allOption.textContent = translate('admin.allDoctors', 'All Doctors');
     filterDoctorSelect.appendChild(allOption);
 
     doctors.forEach((doctor) => {
@@ -362,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const doctor = doctors[0] || null;
       const option = document.createElement('option');
       option.value = String(currentStaffProfile?.doctorId || '');
-      option.textContent = doctor?.name || 'Assigned Doctor';
+      option.textContent = doctor?.name || translate('admin.assignedDoctor', 'Assigned Doctor');
       manualDoctorSelect.appendChild(option);
       manualDoctorSelect.value = String(currentStaffProfile?.doctorId || '');
       manualDoctorSelect.disabled = true;
@@ -373,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const placeholderOption = document.createElement('option');
     placeholderOption.value = '';
-    placeholderOption.textContent = 'Select Doctor';
+    placeholderOption.textContent = translate('admin.selectDoctor', 'Select Doctor');
     manualDoctorSelect.appendChild(placeholderOption);
 
     doctors.forEach((doctor) => {
@@ -441,6 +481,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function localizeSelectOptions(selectElement, options, ariaKey, ariaFallback) {
+    if (!selectElement) {
+      return;
+    }
+
+    selectElement.setAttribute('aria-label', translate(ariaKey, ariaFallback));
+
+    options.forEach((statusOption) => {
+      const optionElement = selectElement.querySelector(`option[value="${statusOption.value}"]`);
+      if (!optionElement) {
+        return;
+      }
+
+      optionElement.textContent = translate(statusOption.labelKey, statusOption.dbLabel);
+    });
+  }
+
   function buildAppointmentRow(appointment) {
     let row;
 
@@ -463,18 +520,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const statusSelect = document.createElement('select');
       statusSelect.name = 'row-status';
-      statusSelect.setAttribute('aria-label', 'Appointment Status');
+      statusSelect.setAttribute(
+        'aria-label',
+        translate('admin.appointmentStatusAria', 'Appointment Status')
+      );
       STATUS_OPTIONS.forEach((statusOption) => {
         const option = document.createElement('option');
         option.value = statusOption.value;
-        option.textContent = statusOption.label;
+        option.textContent = translate(statusOption.labelKey, statusOption.dbLabel);
         statusSelect.appendChild(option);
       });
 
       const updateButton = document.createElement('button');
       updateButton.type = 'button';
       updateButton.setAttribute('data-action', 'update-status');
-      updateButton.textContent = 'Update';
+      updateButton.textContent = translate('admin.update', 'Update');
 
       statusCell.appendChild(statusSelect);
       actionsCell.appendChild(updateButton);
@@ -533,6 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (statusSelect) {
+      localizeSelectOptions(statusSelect, STATUS_OPTIONS, 'admin.appointmentStatusAria', 'Appointment Status');
       statusSelect.value = mapStatusToValue(appointment.status || 'Pending');
     }
 
@@ -542,6 +603,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (updateButton && isDoctorRole()) {
       updateButton.disabled = String(appointment.doctor_id ?? '') !== String(currentStaffProfile?.doctorId || '');
+    }
+
+    if (updateButton) {
+      updateButton.textContent = translate('admin.update', 'Update');
     }
 
     return row;
@@ -597,7 +662,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (isDoctorRole() && (!Array.isArray(data) || data.length === 0)) {
-        throw new Error('You can update only your own appointments.');
+        throw new Error(translate('admin.onlyOwnAppointments', 'You can update only your own appointments.'));
       }
 
       await loadAppointments();
@@ -611,7 +676,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setManualFormMessage('');
 
     if (!isReceptionistRole()) {
-      setManualFormMessage('Only receptionist accounts can create manual appointments.', 'error');
+      setManualFormMessage(
+        translate('admin.onlyReception', 'Only receptionist accounts can create manual appointments.'),
+        'error'
+      );
       return;
     }
 
@@ -623,13 +691,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const notes = (manualNotesInput?.value || '').trim();
 
     if (!patientName || !phone || !doctorId || !date || !time) {
-      setManualFormMessage('Please fill all required fields.', 'error');
+      setManualFormMessage(translate('admin.fillRequired', 'Please fill all required fields.'), 'error');
       return;
     }
 
     if (manualSubmitButton) {
       manualSubmitButton.disabled = true;
-      manualSubmitButton.textContent = 'Submitting...';
+      manualSubmitButton.textContent = translate('admin.submitting', 'Submitting...');
     }
 
     try {
@@ -651,15 +719,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
       manualForm.reset();
       await loadAppointments();
-      setManualFormMessage('Manual appointment created successfully.', 'success');
+      setManualFormMessage(translate('admin.manualCreated', 'Manual appointment created successfully.'), 'success');
     } catch (error) {
       console.error('Error creating manual appointment:', error);
-      const message = String(error?.message || 'Unable to create appointment. Please try again.');
+      const message = String(error?.message || translate('admin.createAppointmentError', 'Unable to create appointment. Please try again.'));
       setManualFormMessage(message, 'error');
     } finally {
       if (manualSubmitButton) {
         manualSubmitButton.disabled = false;
-        manualSubmitButton.textContent = 'Submit';
+        manualSubmitButton.textContent = translate('admin.submit', 'Submit');
       }
     }
   }
@@ -742,16 +810,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const isManagement = isManagementRole();
 
     if (loginTitle) {
-      loginTitle.textContent = 'Staff Login';
+      loginTitle.textContent = translate('admin.staffLogin', 'Staff Login');
     }
 
     if (dashboardTitle) {
       if (isDoctor) {
-        dashboardTitle.textContent = 'Doctor Dashboard';
+        dashboardTitle.textContent = translate('admin.doctorDashboard', 'Doctor Dashboard');
       } else if (isManagement) {
-        dashboardTitle.textContent = 'Management Dashboard';
+        dashboardTitle.textContent = translate('admin.managementDashboard', 'Management Dashboard');
       } else {
-        dashboardTitle.textContent = 'Reception Dashboard';
+        dashboardTitle.textContent = translate('admin.receptionDashboard', 'Reception Dashboard');
       }
     }
 
@@ -806,22 +874,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const message = String(error?.message || '').toLowerCase();
 
     if (message.includes('invalid login credentials')) {
-      return 'Invalid email or password.';
+      return translate('admin.loginInvalid', 'Invalid email or password.');
     }
 
     if (message.includes('email not confirmed')) {
-      return 'Email is not confirmed for this account.';
+      return translate('admin.loginNotConfirmed', 'Email is not confirmed for this account.');
     }
 
     if (message.includes('not assigned as receptionist, doctor, or management')) {
-      return 'Your account is not assigned as receptionist, doctor, or management.';
+      return translate('admin.loginNoRole', 'Your account is not assigned as receptionist, doctor, or management.');
     }
 
     if (message.includes('missing an assigned doctor profile')) {
-      return 'Doctor account is missing assigned doctor profile.';
+      return translate('admin.loginDoctorMissing', 'Doctor account is missing assigned doctor profile.');
     }
 
-    return 'Unable to login right now. Please try again.';
+    return translate('admin.loginUnavailable', 'Unable to login right now. Please try again.');
   }
 
   function resolveAuthEmail(identifier) {
@@ -967,12 +1035,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (statusSelect) {
+      localizeSelectOptions(statusSelect, COMPLAINT_STATUS_OPTIONS, 'admin.complaintStatusAria', 'Complaint Status');
       statusSelect.value = mapComplaintStatusToValue(complaint.status || 'New');
       statusSelect.disabled = !isManagementRole();
     }
 
     if (updateButton) {
       updateButton.disabled = !isManagementRole();
+      updateButton.textContent = translate('admin.update', 'Update');
     }
 
     return row;
@@ -1033,7 +1103,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return 'New';
     }
 
-    return matchedStatus.label;
+    return matchedStatus.dbLabel;
   }
 
   function mapComplaintStatusToValue(value) {
@@ -1043,7 +1113,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return 'new';
     }
 
-    const matchedStatus = COMPLAINT_STATUS_OPTIONS.find((statusOption) => statusOption.value === normalizedValue || statusOption.label.toLowerCase() === normalizedValue);
+    const matchedStatus = COMPLAINT_STATUS_OPTIONS.find(
+      (statusOption) => statusOption.value === normalizedValue || statusOption.dbLabel.toLowerCase() === normalizedValue
+    );
     return matchedStatus ? matchedStatus.value : 'new';
   }
 
@@ -1078,7 +1150,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return String(value);
     }
 
-    return date.toLocaleString('en-IN', {
+    const locale = i18n && typeof i18n.getLocale === 'function' ? i18n.getLocale() : 'en-IN';
+
+    return date.toLocaleString(locale, {
       year: 'numeric',
       month: 'short',
       day: '2-digit',
@@ -1106,6 +1180,6 @@ document.addEventListener('DOMContentLoaded', () => {
       parts.push(email);
     }
 
-    return parts.length ? parts.join(' | ') : 'Anonymous';
+    return parts.length ? parts.join(' | ') : translate('admin.anonymous', 'Anonymous');
   }
 });

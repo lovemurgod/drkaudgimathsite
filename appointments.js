@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   let scheduleLookup = new Map();
+  const i18n = window.siteI18n;
 
   const form = document.getElementById('appointment-form');
   const doctorSelect = document.getElementById('doctor') || document.getElementById('doctor_id');
@@ -26,6 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const notesInput = document.getElementById('notes');
   const formMessage = document.getElementById('form-message');
   const requestedDoctorName = getDoctorNameFromQuery();
+
+  function translate(key, fallback, vars) {
+    if (!i18n || typeof i18n.t !== 'function') {
+      return fallback;
+    }
+
+    const translated = i18n.t(key, vars);
+    return translated === key ? fallback : translated;
+  }
 
   const supabaseClient =
     (window.supabaseClient && typeof window.supabaseClient.from === 'function' && window.supabaseClient) ||
@@ -43,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (!supabaseClient) {
-    showMessage('Unable to initialize booking service. Please try again later.', 'error');
+    showMessage(translate('appointments.initError', 'Unable to initialize booking service. Please try again later.'), 'error');
     console.error('Supabase client is not available on window.supabase.');
     return;
   }
@@ -56,6 +66,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   doctorSelect.addEventListener('change', () => {
     applyDateConstraintsForSelectedDoctor();
+    refreshAvailableTimeOptions();
+  });
+
+  window.addEventListener('app:language-changed', () => {
+    enforceDateRuleForSelectedDoctor();
     refreshAvailableTimeOptions();
   });
 
@@ -102,10 +117,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const option = document.createElement('option');
       option.value = '';
-      option.textContent = 'Unable to load doctors';
+      option.textContent = translate('appointments.loadDoctorsErrorInline', 'Unable to load doctors');
       doctorSelect.appendChild(option);
 
-      showMessage('Unable to load doctors right now. Please refresh and try again.', 'error');
+      showMessage(
+        translate('appointments.loadDoctorsError', 'Unable to load doctors right now. Please refresh and try again.'),
+        'error'
+      );
     }
   }
 
@@ -199,18 +217,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const schedule = scheduleLookup.get(normalizeDoctorName(selectedDoctorName));
 
     if (!schedule) {
-      appointmentDateInput.setCustomValidity('Schedule not available for selected doctor.');
+      appointmentDateInput.setCustomValidity(
+        translate('appointments.scheduleMissing', 'Schedule not available for selected doctor.')
+      );
       return false;
     }
 
     const date = new Date(`${appointmentDateInput.value}T12:00:00`);
     if (Number.isNaN(date.getTime())) {
-      appointmentDateInput.setCustomValidity('Please select a valid appointment date.');
+      appointmentDateInput.setCustomValidity(translate('appointments.invalidDate', 'Please select a valid appointment date.'));
       return false;
     }
 
     if (!isDateAllowedByRule(date, schedule.days)) {
-      appointmentDateInput.setCustomValidity(`Doctor is unavailable on ${formatDayName(date)}.`);
+      appointmentDateInput.setCustomValidity(
+        translate('appointments.unavailableDay', `Doctor is unavailable on ${formatDayName(date)}.`, { day: formatDayName(date) })
+      );
       return false;
     }
 
@@ -226,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
     appointmentTimeInput.innerHTML = '';
     const option = document.createElement('option');
     option.value = '';
-    option.textContent = 'Select doctor and date first';
+    option.textContent = translate('appointment.selectDoctorAndDateFirst', 'Select doctor and date first');
     appointmentTimeInput.appendChild(option);
   }
 
@@ -235,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loadingOption = document.createElement('option');
     loadingOption.value = '';
-    loadingOption.textContent = 'Loading doctors...';
+    loadingOption.textContent = translate('appointment.loadingDoctors', 'Loading doctors...');
     doctorSelect.appendChild(loadingOption);
   }
 
@@ -244,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const placeholderOption = document.createElement('option');
     placeholderOption.value = '';
-    placeholderOption.textContent = 'Select Doctor';
+    placeholderOption.textContent = translate('appointment.selectDoctor', 'Select Doctor');
     doctorSelect.appendChild(placeholderOption);
 
     doctors.forEach((doctor) => {
@@ -304,41 +326,41 @@ document.addEventListener('DOMContentLoaded', () => {
     appointmentTimeInput.innerHTML = '';
 
     if (!doctorSelect.value) {
-      appendTimePlaceholder('Select doctor first');
+      appendTimePlaceholder(translate('appointment.selectDoctorFirst', 'Select doctor first'));
       return;
     }
 
     if (!appointmentDate) {
-      appendTimePlaceholder('Select appointment date first');
+      appendTimePlaceholder(translate('appointment.selectAppointmentDateFirst', 'Select appointment date first'));
       return;
     }
 
     if (!enforceDateRuleForSelectedDoctor()) {
-      appendTimePlaceholder('Doctor unavailable on selected date');
+      appendTimePlaceholder(translate('appointment.unavailableSelectedDate', 'Doctor unavailable on selected date'));
       return;
     }
 
     const schedule = scheduleLookup.get(normalizeDoctorName(selectedDoctorName));
     if (!schedule) {
-      appendTimePlaceholder('No schedule available for selected doctor');
+      appendTimePlaceholder(translate('appointment.noScheduleForDoctor', 'No schedule available for selected doctor'));
       return;
     }
 
     const date = new Date(`${appointmentDate}T12:00:00`);
     if (Number.isNaN(date.getTime())) {
-      appendTimePlaceholder('Select a valid appointment date');
+      appendTimePlaceholder(translate('appointment.selectValidDate', 'Select a valid appointment date'));
       return;
     }
 
     if (!isDateAllowedByRule(date, schedule.days)) {
-      appendTimePlaceholder('Doctor unavailable on selected date');
+      appendTimePlaceholder(translate('appointment.unavailableSelectedDate', 'Doctor unavailable on selected date'));
       return;
     }
 
     if (/on\s*call/i.test(schedule.time)) {
       const onCallOption = document.createElement('option');
       onCallOption.value = 'On Call';
-      onCallOption.textContent = 'On Call';
+      onCallOption.textContent = translate('appointment.onCall', 'On Call');
       appointmentTimeInput.appendChild(onCallOption);
       return;
     }
@@ -347,11 +369,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const slots = buildTimeSlots(timeRanges, 30);
 
     if (!slots.length) {
-      appendTimePlaceholder('No available time slots');
+      appendTimePlaceholder(translate('appointment.noAvailableSlots', 'No available time slots'));
       return;
     }
 
-    appendTimePlaceholder('Select Appointment Time');
+    appendTimePlaceholder(translate('appointment.selectAppointmentTime', 'Select Appointment Time'));
 
     slots.forEach((minutes) => {
       const timeLabel = formatMinutesTo12Hour(minutes);
@@ -375,7 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!patientNameInput || !patientPhoneInput || !appointmentDateInput || !appointmentTimeInput) {
       console.error('One or more required form input elements are missing for submission.');
-      showMessage('Form is not configured correctly. Please contact support.', 'error');
+      showMessage(translate('appointments.formConfigError', 'Form is not configured correctly. Please contact support.'), 'error');
       return;
     }
 
@@ -392,12 +414,16 @@ document.addEventListener('DOMContentLoaded', () => {
       '';
 
     if (!patient_name || !patient_phone || !doctor_id || !appointment_date || !appointment_time) {
-      showMessage('Please fill all required fields before submitting.', 'error');
+      showMessage(translate('appointments.requiredFieldsError', 'Please fill all required fields before submitting.'), 'error');
       return;
     }
 
     if (appointmentDateInput && !enforceDateRuleForSelectedDoctor()) {
-      showMessage(appointmentDateInput.validationMessage || 'Selected doctor is unavailable on this date.', 'error');
+      showMessage(
+        appointmentDateInput.validationMessage ||
+          translate('appointments.unavailableDateError', 'Selected doctor is unavailable on this date.'),
+        'error'
+      );
       return;
     }
 
@@ -424,12 +450,12 @@ document.addEventListener('DOMContentLoaded', () => {
         throw error;
       }
 
-      showMessage('Appointment request submitted. Our team will confirm shortly.', 'success');
+      showMessage(translate('appointments.success', 'Appointment request submitted. Our team will confirm shortly.'), 'success');
       form.reset();
       form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (error) {
       console.error('Error submitting appointment:', error);
-      showMessage('Something went wrong while submitting your request. Please try again.', 'error');
+      showMessage(translate('appointments.submitError', 'Something went wrong while submitting your request. Please try again.'), 'error');
     }
   }
 
@@ -458,7 +484,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!schedule) {
       return {
         isValid: false,
-        message: 'Selected doctor schedule is not available. Please choose another doctor or contact support.'
+        message: translate(
+          'appointments.scheduleMissingLong',
+          'Selected doctor schedule is not available. Please choose another doctor or contact support.'
+        )
       };
     }
 
@@ -466,14 +495,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (Number.isNaN(date.getTime())) {
       return {
         isValid: false,
-        message: 'Please choose a valid appointment date.'
+        message: translate('appointments.invalidDateLong', 'Please choose a valid appointment date.')
       };
     }
 
     if (!isDateAllowedByRule(date, schedule.days)) {
       return {
         isValid: false,
-        message: `Selected doctor is unavailable on ${formatDayName(date)}. Please choose another day.`
+        message: translate(
+          'appointments.unavailableDayLong',
+          `Selected doctor is unavailable on ${formatDayName(date)}. Please choose another day.`,
+          { day: formatDayName(date) }
+        )
       };
     }
 
@@ -485,7 +518,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (requestedTimeInMinutes === null) {
       return {
         isValid: false,
-        message: 'Please enter time in a valid format, for example: 10:30 AM or 14:30.'
+        message: translate(
+          'appointments.invalidTime',
+          'Please enter time in a valid format, for example: 10:30 AM or 14:30.'
+        )
       };
     }
 
@@ -497,7 +533,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!isWithinAnyRange) {
       return {
         isValid: false,
-        message: `Selected doctor is available at ${schedule.time}. Please choose a time within schedule.`
+        message: translate(
+          'appointments.timeOutsideSchedule',
+          `Selected doctor is available at ${schedule.time}. Please choose a time within schedule.`,
+          { time: schedule.time }
+        )
       };
     }
 
@@ -654,7 +694,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function formatDayName(date) {
-    return date.toLocaleDateString('en-US', { weekday: 'long' });
+    const locale = i18n && typeof i18n.getLocale === 'function' ? i18n.getLocale() : 'en-IN';
+    return date.toLocaleDateString(locale, { weekday: 'long' });
   }
 
   function formatDateForInput(date) {

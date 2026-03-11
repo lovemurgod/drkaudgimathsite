@@ -8,13 +8,22 @@
 </head>
 <body class="admin-page">
   <main>
+    <div class="admin-language-switcher">
+      <label data-language-label for="language-selector-admin">Language:</label>
+      <select id="language-selector-admin" class="language-control__select" data-language-selector aria-label="Language selector" data-i18n-attr="aria-label:common.languageSelectorAria">
+        <option value="en">English</option>
+        <option value="hi">Hindi</option>
+        <option value="kn">Kannada</option>
+      </select>
+    </div>
+
     <section id="login-view" aria-labelledby="login-title">
-      <div class="login-card" role="region" aria-label="Staff login">
-        <h1 id="login-title">Staff Login</h1>
+      <div class="login-card" role="region" aria-label="Staff login" data-i18n-attr="aria-label:admin.staffLogin">
+        <h1 id="login-title" data-i18n="admin.staffLogin">Staff Login</h1>
 
         <form id="login-form" novalidate>
           <div>
-            <label for="admin-email">Email or Username</label>
+            <label for="admin-email" data-i18n="admin.field.emailOrUsername">Email or Username</label>
             <input
               type="text"
               id="admin-email"
@@ -25,7 +34,7 @@
           </div>
 
           <div>
-            <label for="admin-password">Password</label>
+            <label for="admin-password" data-i18n="admin.field.password">Password</label>
             <input
               type="password"
               id="admin-password"
@@ -35,7 +44,7 @@
             />
           </div>
 
-          <button type="submit" id="login-button">Login</button>
+          <button type="submit" id="login-button" data-i18n="admin.login">Login</button>
           <div id="login-message" role="alert" aria-live="polite"></div>
         </form>
       </div>
@@ -43,54 +52,54 @@
 
     <section id="dashboard-view" aria-labelledby="dashboard-title" hidden>
       <header class="dashboard-top-bar">
-        <h2 id="dashboard-title">Staff Dashboard</h2>
-        <button type="button" id="logout-button">Logout</button>
+        <h2 id="dashboard-title" data-i18n="admin.staffDashboard">Staff Dashboard</h2>
+        <button type="button" id="logout-button" data-i18n="admin.logout">Logout</button>
       </header>
 
       <section id="filters-section" aria-labelledby="filters-title">
-        <h3 id="filters-title">Filters</h3>
+        <h3 id="filters-title" data-i18n="admin.filters">Filters</h3>
         <form id="filters-form" novalidate>
           <div>
-            <label for="filter-date">Date</label>
+            <label for="filter-date" data-i18n="admin.field.date">Date</label>
             <input type="date" id="filter-date" name="filter-date" />
           </div>
 
           <div>
-            <label for="filter-doctor">Doctor</label>
+            <label for="filter-doctor" data-i18n="admin.field.doctor">Doctor</label>
             <select id="filter-doctor" name="filter-doctor">
-              <option value="">All Doctors</option>
+              <option value="" data-i18n="admin.allDoctors">All Doctors</option>
             </select>
           </div>
 
           <div>
-            <label for="filter-status">Status</label>
+            <label for="filter-status" data-i18n="admin.field.status">Status</label>
             <select id="filter-status" name="filter-status">
-              <option value="">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="no-show">No Show</option>
+              <option value="" data-i18n="admin.allStatuses">All Statuses</option>
+              <option value="pending" data-i18n="admin.status.pending">Pending</option>
+              <option value="confirmed" data-i18n="admin.status.confirmed">Confirmed</option>
+              <option value="completed" data-i18n="admin.status.completed">Completed</option>
+              <option value="cancelled" data-i18n="admin.status.cancelled">Cancelled</option>
+              <option value="no-show" data-i18n="admin.status.noShow">No Show</option>
             </select>
           </div>
         </form>
       </section>
 
       <section id="appointments-section" aria-labelledby="appointments-title">
-        <h3 id="appointments-title">Appointments</h3>
+        <h3 id="appointments-title" data-i18n="admin.appointments">Appointments</h3>
         <div class="table-responsive">
           <table>
-            <caption class="sr-only">Hospital appointment list</caption>
+            <caption class="sr-only" data-i18n="admin.appointmentsCaption">Hospital appointment list</caption>
             <thead>
               <tr>
-                <th scope="col">Patient Name</th>
-                <th scope="col">Phone</th>
-                <th scope="col">Doctor</th>
-                <th scope="col">Date</th>
-                <th scope="col">Time</th>
-                <th scope="col">Status</th>
-                <th scope="col">Source</th>
-                <th scope="col">Actions</th>
+                <th scope="col" data-i18n="admin.field.patientName">Patient Name</th>
+                <th scope="col" data-i18n="admin.field.phone">Phone</th>
+                <th scope="col" data-i18n="admin.field.doctor">Doctor</th>
+                <th scope="col" data-i18n="admin.field.date">Date</th>
+                <th scope="col" data-i18n="admin.field.time">Time</th>
+                <th scope="col" data-i18n="admin.field.status">Status</th>
+                <th scope="col" data-i18n="admin.field.source">Source</th>
+                <th scope="col" data-i18n="admin.field.actions">Actions</th>
               </tr>
             </thead>
             <tbody id="appointments-table-body">
@@ -105,37 +114,37 @@
             <td data-field="date"></td>
             <td data-field="time"></td>
             <td>
-              <select name="row-status" aria-label="Appointment Status">
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="no-show">No Show</option>
+              <select name="row-status" aria-label="Appointment Status" data-i18n-attr="aria-label:admin.appointmentStatusAria">
+                <option value="pending" data-i18n="admin.status.pending">Pending</option>
+                <option value="confirmed" data-i18n="admin.status.confirmed">Confirmed</option>
+                <option value="completed" data-i18n="admin.status.completed">Completed</option>
+                <option value="cancelled" data-i18n="admin.status.cancelled">Cancelled</option>
+                <option value="no-show" data-i18n="admin.status.noShow">No Show</option>
               </select>
             </td>
             <td data-field="source"></td>
             <td>
-              <button type="button" data-action="update-status">Update</button>
+              <button type="button" data-action="update-status" data-i18n="admin.update">Update</button>
             </td>
           </tr>
         </template>
       </section>
 
       <section id="complaints-section" aria-labelledby="complaints-title" hidden>
-        <h3 id="complaints-title">Complaints</h3>
+        <h3 id="complaints-title" data-i18n="admin.complaints">Complaints</h3>
         <div class="table-responsive">
           <table>
-            <caption class="sr-only">Hospital complaints list</caption>
+            <caption class="sr-only" data-i18n="admin.complaintsCaption">Hospital complaints list</caption>
             <thead>
               <tr>
-                <th scope="col">Occurred Date</th>
-                <th scope="col">Occurred Time</th>
-                <th scope="col">Nature</th>
-                <th scope="col">Details</th>
-                <th scope="col">Reporter</th>
-                <th scope="col">Reported At</th>
-                <th scope="col">Status</th>
-                <th scope="col">Actions</th>
+                <th scope="col" data-i18n="admin.field.occurredDate">Occurred Date</th>
+                <th scope="col" data-i18n="admin.field.occurredTime">Occurred Time</th>
+                <th scope="col" data-i18n="admin.field.nature">Nature</th>
+                <th scope="col" data-i18n="admin.field.details">Details</th>
+                <th scope="col" data-i18n="admin.field.reporter">Reporter</th>
+                <th scope="col" data-i18n="admin.field.reportedAt">Reported At</th>
+                <th scope="col" data-i18n="admin.field.status">Status</th>
+                <th scope="col" data-i18n="admin.field.actions">Actions</th>
               </tr>
             </thead>
             <tbody id="complaints-table-body"></tbody>
@@ -150,31 +159,31 @@
             <td data-field="reporter"></td>
             <td data-field="reported-at"></td>
             <td>
-              <select name="complaint-status" aria-label="Complaint Status">
-                <option value="new">New</option>
-                <option value="investigating">Investigating</option>
-                <option value="resolved">Resolved</option>
-                <option value="rejected">Rejected</option>
+              <select name="complaint-status" aria-label="Complaint Status" data-i18n-attr="aria-label:admin.complaintStatusAria">
+                <option value="new" data-i18n="admin.complaintStatus.new">New</option>
+                <option value="investigating" data-i18n="admin.complaintStatus.investigating">Investigating</option>
+                <option value="resolved" data-i18n="admin.complaintStatus.resolved">Resolved</option>
+                <option value="rejected" data-i18n="admin.complaintStatus.rejected">Rejected</option>
               </select>
             </td>
             <td>
-              <button type="button" data-action="update-complaint-status">Update</button>
+              <button type="button" data-action="update-complaint-status" data-i18n="admin.update">Update</button>
             </td>
           </tr>
         </template>
       </section>
 
       <section id="manual-entry" aria-labelledby="manual-entry-title">
-        <h3 id="manual-entry-title">Manual Appointment Entry</h3>
+        <h3 id="manual-entry-title" data-i18n="admin.manualEntry">Manual Appointment Entry</h3>
 
         <form id="manual-appointment-form" novalidate>
           <div>
-            <label for="manual-patient-name">Patient Name</label>
+            <label for="manual-patient-name" data-i18n="admin.field.patientName">Patient Name</label>
             <input type="text" id="manual-patient-name" name="patient-name" required />
           </div>
 
           <div>
-            <label for="manual-phone">Phone</label>
+            <label for="manual-phone" data-i18n="admin.field.phone">Phone</label>
             <input
               type="tel"
               id="manual-phone"
@@ -185,34 +194,35 @@
           </div>
 
           <div>
-            <label for="manual-doctor">Doctor</label>
+            <label for="manual-doctor" data-i18n="admin.field.doctor">Doctor</label>
             <select id="manual-doctor" name="doctor" required>
-              <option value="">Select Doctor</option>
+              <option value="" data-i18n="admin.selectDoctor">Select Doctor</option>
             </select>
           </div>
 
           <div>
-            <label for="manual-date">Date</label>
+            <label for="manual-date" data-i18n="admin.field.date">Date</label>
             <input type="date" id="manual-date" name="date" required />
           </div>
 
           <div>
-            <label for="manual-time">Time</label>
+            <label for="manual-time" data-i18n="admin.field.time">Time</label>
             <input type="time" id="manual-time" name="time" required />
           </div>
 
           <div>
-            <label for="manual-notes">Notes</label>
+            <label for="manual-notes" data-i18n="admin.field.notes">Notes</label>
             <textarea id="manual-notes" name="notes" rows="3"></textarea>
           </div>
 
-          <button type="submit" id="manual-submit">Submit</button>
+          <button type="submit" id="manual-submit" data-i18n="admin.submit">Submit</button>
         </form>
       </section>
     </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="i18n.js" defer></script>
   <script src="supabaseClient.js" defer></script>
   <script src="js/admin.js" defer></script>
 </body>

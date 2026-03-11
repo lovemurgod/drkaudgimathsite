@@ -1,4 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const i18n = window.siteI18n;
+
+  function translate(key, fallback, vars) {
+    if (!i18n || typeof i18n.t !== 'function') {
+      return fallback;
+    }
+
+    const translated = i18n.t(key, vars);
+    return translated === key ? fallback : translated;
+  }
+
   const form = document.getElementById('complaint-form');
   const messageElement = document.getElementById('complaint-form-message');
   const reporterNameInput = document.getElementById('reporter_name');
@@ -20,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (!supabaseClient) {
-    showMessage('Unable to initialize complaint service. Please try again later.', 'error');
+    showMessage(translate('complaints.initError', 'Unable to initialize complaint service. Please try again later.'), 'error');
     return;
   }
 
@@ -43,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const incident_details = (incidentDetailsInput?.value || '').trim();
 
     if (!incident_date || !incident_time || !incident_nature || !incident_details) {
-      showMessage('Please fill all required incident fields before submitting.', 'error');
+      showMessage(translate('complaints.requiredFieldsError', 'Please fill all required incident fields before submitting.'), 'error');
       return;
     }
 
@@ -66,11 +77,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (incidentDateInput) {
         incidentDateInput.max = formatDateForInput(new Date());
       }
-      showMessage('Complaint submitted successfully. Thank you for your feedback.', 'success');
+      showMessage(translate('complaints.success', 'Complaint submitted successfully. Thank you for your feedback.'), 'success');
       form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (error) {
       console.error('Error submitting complaint:', error);
-      showMessage('Something went wrong while submitting your complaint. Please try again.', 'error');
+      showMessage(translate('complaints.submitError', 'Something went wrong while submitting your complaint. Please try again.'), 'error');
     }
   }
 
