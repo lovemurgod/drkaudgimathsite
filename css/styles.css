@@ -375,6 +375,10 @@ p {
   padding: 1rem;
 }
 
+.language-modal[hidden] {
+  display: none !important;
+}
+
 .language-modal__backdrop {
   position: absolute;
   inset: 0;
