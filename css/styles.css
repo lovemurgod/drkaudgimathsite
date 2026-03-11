@@ -1021,8 +1021,8 @@ p {
   }
 
   .primary-nav__ambulance .button--emergency {
-    width: 112px;
-    min-height: 112px;
+    width: 88px;
+    min-height: 88px;
     padding: 0.45rem;
     border-radius: 8px;
     justify-content: center;
