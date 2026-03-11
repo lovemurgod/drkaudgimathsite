@@ -27,6 +27,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const notesInput = document.getElementById('notes');
   const formMessage = document.getElementById('form-message');
   const requestedDoctorName = getDoctorNameFromQuery();
+  const DOCTOR_NAME_KEY_BY_NORMALIZED = {
+    drvinayakmugalakhod: 'index.doctors.name.vinayak',
+    drajaytnaik: 'index.doctors.name.ajay',
+    drsantoshbdesai: 'index.doctors.name.santoshDesai',
+    drbhrevanasiddappa: 'index.doctors.name.revanasiddappa',
+    drkirankumarskulageri: 'index.doctors.name.kirankumar',
+    drjayantkumar: 'index.doctors.name.jayant',
+    drpradeepnandi: 'index.doctors.name.pradeep',
+    drabhinandanb: 'index.doctors.name.abhinandan',
+    drsantoshmalashetti: 'index.doctors.name.santoshMalashetti',
+    dranirudhamallapur: 'index.doctors.name.anirudh',
+    drvinodakkasali: 'index.doctors.name.vinod',
+    drtohidkazi: 'index.doctors.name.tohid'
+  };
 
   function translate(key, fallback, vars) {
     if (!i18n || typeof i18n.t !== 'function') {
@@ -70,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   window.addEventListener('app:language-changed', () => {
+    localizeDoctorOptions();
     enforceDateRuleForSelectedDoctor();
     refreshAvailableTimeOptions();
   });
@@ -275,11 +290,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const name = (doctor.name || '').trim();
       const speciality = (doctor.speciality || '').trim();
-      option.textContent = speciality ? `${name} - ${speciality}` : name;
       option.dataset.doctorName = name;
+      option.dataset.doctorSpeciality = speciality;
+      option.textContent = formatDoctorOptionLabel(name, speciality);
 
       doctorSelect.appendChild(option);
     });
+  }
+
+  function formatDoctorOptionLabel(doctorName, speciality) {
+    const localizedName = localizeDoctorName(doctorName);
+    const trimmedSpeciality = String(speciality || '').trim();
+    return trimmedSpeciality ? `${localizedName} - ${trimmedSpeciality}` : localizedName;
+  }
+
+  function localizeDoctorName(doctorName) {
+    const normalizedName = normalizeDoctorName(doctorName);
+    const translationKey = DOCTOR_NAME_KEY_BY_NORMALIZED[normalizedName];
+
+    if (!translationKey) {
+      return doctorName;
+    }
+
+    return translate(translationKey, doctorName);
+  }
+
+  function localizeDoctorOptions() {
+    if (!doctorSelect || !doctorSelect.options || !doctorSelect.options.length) {
+      return;
+    }
+
+    const placeholderOption = doctorSelect.options[0];
+    if (placeholderOption && !placeholderOption.value) {
+      placeholderOption.textContent = translate('appointment.selectDoctor', 'Select Doctor');
+    }
+
+    for (let index = 1; index < doctorSelect.options.length; index += 1) {
+      const option = doctorSelect.options[index];
+      const doctorName = option.dataset.doctorName || option.textContent || '';
+      const speciality = option.dataset.doctorSpeciality || '';
+      option.textContent = formatDoctorOptionLabel(doctorName, speciality);
+    }
   }
 
   function getDoctorNameFromQuery() {
