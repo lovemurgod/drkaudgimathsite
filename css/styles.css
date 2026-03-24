@@ -1311,6 +1311,107 @@ p {
   gap: 0.65rem;
 }
 
+.admin-page .management-alert-detail__timeline h5 {
+  margin-bottom: 0.75rem;
+}
+
+.admin-page .management-alert-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.admin-page .management-alert-timeline__item {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 0.8rem;
+  align-items: start;
+}
+
+.admin-page .management-alert-timeline__marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  min-width: 32px;
+  min-height: 32px;
+  margin-top: 0.05rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(0, 151, 178, 0.14);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.admin-page .management-alert-timeline__content {
+  position: relative;
+  padding: 0 0 0.95rem 0.85rem;
+  border-left: 2px solid #dbe9f2;
+}
+
+.admin-page .management-alert-timeline__item:last-child .management-alert-timeline__content {
+  padding-bottom: 0;
+}
+
+.admin-page .management-alert-timeline__title {
+  margin: 0 0 0.2rem;
+  color: #1f374b;
+  font-weight: 700;
+}
+
+.admin-page .management-alert-timeline__time {
+  margin: 0 0 0.35rem;
+  color: #51697b;
+  font-size: 0.87rem;
+  font-weight: 700;
+}
+
+.admin-page .management-alert-timeline__description {
+  margin: 0;
+  color: #2d4659;
+  white-space: pre-wrap;
+}
+
+.admin-page .management-alert-timeline__item[data-event-type='created'] .management-alert-timeline__marker {
+  background: #d62828;
+  box-shadow: 0 0 0 4px rgba(214, 40, 40, 0.12);
+}
+
+.admin-page .management-alert-timeline__item[data-event-type='created'] .management-alert-timeline__content {
+  border-left-color: rgba(214, 40, 40, 0.22);
+}
+
+.admin-page .management-alert-timeline__item[data-event-type='viewed'] .management-alert-timeline__marker {
+  background: #0d566d;
+  box-shadow: 0 0 0 4px rgba(13, 86, 109, 0.12);
+}
+
+.admin-page .management-alert-timeline__item[data-event-type='viewed'] .management-alert-timeline__content {
+  border-left-color: rgba(13, 86, 109, 0.2);
+}
+
+.admin-page .management-alert-timeline__item[data-event-type='status'] .management-alert-timeline__marker {
+  background: #2446a8;
+  box-shadow: 0 0 0 4px rgba(36, 70, 168, 0.12);
+}
+
+.admin-page .management-alert-timeline__item[data-event-type='status'] .management-alert-timeline__content {
+  border-left-color: rgba(36, 70, 168, 0.2);
+}
+
+.admin-page .management-alert-timeline__item[data-event-type='note'] .management-alert-timeline__marker {
+  background: #1f7a5a;
+  box-shadow: 0 0 0 4px rgba(31, 122, 90, 0.12);
+}
+
+.admin-page .management-alert-timeline__item[data-event-type='note'] .management-alert-timeline__content {
+  border-left-color: rgba(31, 122, 90, 0.2);
+}
+
 .admin-page .management-alert-detail__comment-actions {
   display: flex;
   align-items: center;

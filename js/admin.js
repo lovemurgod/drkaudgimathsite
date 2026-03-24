@@ -87,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const managementAlertCommentMessage = document.getElementById('management-alert-comment-message');
   const managementAlertCommentsEmpty = document.getElementById('management-alert-comments-empty');
   const managementAlertCommentsList = document.getElementById('management-alert-comments-list');
+  const managementAlertTimelineList = document.getElementById('management-alert-timeline-list');
 
   const manualForm = document.getElementById('manual-appointment-form');
   const manualEntrySection = document.getElementById('manual-entry');
@@ -1412,7 +1413,137 @@ document.addEventListener('DOMContentLoaded', () => {
       managementAlertCommentSaveButton.disabled = false;
     }
 
+    renderManagementAlertTimeline(selectedAlert);
     renderManagementAlertComments(selectedAlert);
+  }
+
+  function renderManagementAlertTimeline(alert) {
+    if (!managementAlertTimelineList) {
+      return;
+    }
+
+    managementAlertTimelineList.innerHTML = '';
+
+    const timelineItems = buildManagementAlertTimelineItems(alert);
+    timelineItems.forEach((item) => {
+      const listItem = document.createElement('li');
+      listItem.className = 'management-alert-timeline__item';
+      listItem.dataset.eventType = item.eventType;
+      if (item.statusValue) {
+        listItem.dataset.statusValue = item.statusValue;
+      }
+
+      const marker = document.createElement('span');
+      marker.className = 'management-alert-timeline__marker';
+      marker.setAttribute('aria-hidden', 'true');
+      marker.textContent = getManagementAlertTimelineMarkerText(item.eventType);
+
+      const content = document.createElement('div');
+      content.className = 'management-alert-timeline__content';
+
+      const title = document.createElement('p');
+      title.className = 'management-alert-timeline__title';
+      title.textContent = item.title;
+
+      const time = document.createElement('p');
+      time.className = 'management-alert-timeline__time';
+      time.textContent = item.timeLabel;
+
+      content.appendChild(title);
+      content.appendChild(time);
+
+      if (item.description) {
+        const description = document.createElement('p');
+        description.className = 'management-alert-timeline__description';
+        description.textContent = item.description;
+        content.appendChild(description);
+      }
+
+      listItem.appendChild(marker);
+      listItem.appendChild(content);
+      managementAlertTimelineList.appendChild(listItem);
+    });
+  }
+
+  function buildManagementAlertTimelineItems(alert) {
+    const timelineItems = [];
+
+    timelineItems.push({
+      sortAt: alert.createdAt,
+      eventType: 'created',
+      title: translate('admin.managementAlertTimelineCreated', 'Alert created'),
+      timeLabel: formatReportedAt(alert.createdAt),
+      description: translate('admin.managementAlertTimelineCreatedDescription', 'Reception sent this management alert.')
+    });
+
+    if (alert.shownAt) {
+      timelineItems.push({
+        sortAt: alert.shownAt,
+        eventType: 'viewed',
+        title: translate('admin.managementAlertTimelineViewed', 'Viewed by you'),
+        timeLabel: formatReportedAt(alert.shownAt),
+        description: translate('admin.managementAlertTimelineViewedDescription', 'You opened or received this alert.')
+      });
+    }
+
+    if (shouldShowStatusTimelineEntry(alert)) {
+      timelineItems.push({
+        sortAt: alert.statusUpdatedAt,
+        eventType: 'status',
+        statusValue: alert.statusValue,
+        title: translate('admin.managementAlertTimelineStatusChanged', 'Status updated'),
+        timeLabel: formatReportedAt(alert.statusUpdatedAt),
+        description: `${translate('admin.managementAlertTimelineStatusPrefix', 'Current status:')} ${alert.statusLabel}`
+      });
+    }
+
+    alert.comments.forEach((comment) => {
+      const authorLabel = comment.manager_user_id === currentUserId
+        ? translate('admin.you', 'You')
+        : translate('admin.managementTeam', 'Management');
+
+      timelineItems.push({
+        sortAt: comment.created_at,
+        eventType: 'note',
+        title: translate('admin.managementAlertTimelineNoteAdded', 'Note added'),
+        timeLabel: formatReportedAt(comment.created_at),
+        description: `${authorLabel}: ${comment.note || ''}`.trim()
+      });
+    });
+
+    return timelineItems.sort((leftItem, rightItem) => new Date(rightItem.sortAt) - new Date(leftItem.sortAt));
+  }
+
+  function shouldShowStatusTimelineEntry(alert) {
+    if (!alert.statusUpdatedAt) {
+      return false;
+    }
+
+    if (alert.statusValue !== 'new') {
+      return true;
+    }
+
+    return false;
+  }
+
+  function getManagementAlertTimelineMarkerText(eventType) {
+    if (eventType === 'created') {
+      return 'A';
+    }
+
+    if (eventType === 'viewed') {
+      return 'V';
+    }
+
+    if (eventType === 'status') {
+      return 'S';
+    }
+
+    if (eventType === 'note') {
+      return 'N';
+    }
+
+    return 'I';
   }
 
   function renderManagementAlertComments(alert) {
