@@ -32,6 +32,14 @@ document.addEventListener('DOMContentLoaded', () => {
     { value: 'rejected', dbLabel: 'Rejected', labelKey: 'admin.complaintStatus.rejected' }
   ];
 
+  const MANAGEMENT_ALERT_STATUS_OPTIONS = [
+    { value: 'new', dbLabel: 'New', labelKey: 'admin.managementAlertStatus.new' },
+    { value: 'acknowledged', dbLabel: 'Acknowledged', labelKey: 'admin.managementAlertStatus.acknowledged' },
+    { value: 'in-progress', dbLabel: 'In Progress', labelKey: 'admin.managementAlertStatus.inProgress' },
+    { value: 'resolved', dbLabel: 'Resolved', labelKey: 'admin.managementAlertStatus.resolved' },
+    { value: 'rejected', dbLabel: 'Rejected', labelKey: 'admin.managementAlertStatus.rejected' }
+  ];
+
   const supabaseClient =
     (window.supabaseClient && typeof window.supabaseClient.from === 'function' && window.supabaseClient) ||
     (window.supabase && typeof window.supabase.from === 'function' && window.supabase) ||
@@ -50,6 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginMessage = document.getElementById('login-message');
 
   const logoutButton = document.getElementById('logout-button');
+  const pingManagementButton = document.getElementById('ping-management-button');
+  const pingManagementMessage = document.getElementById('ping-management-message');
 
   const filterDateInput = document.getElementById('filter-date');
   const filterDoctorSelect = document.getElementById('filter-doctor');
@@ -63,6 +73,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const complaintsSection = document.getElementById('complaints-section');
   const complaintsTableBody = document.getElementById('complaints-table-body');
   const complaintRowTemplate = document.getElementById('complaint-row-template');
+  const managementAlertHistorySection = document.getElementById('management-alert-history');
+  const managementAlertHistoryBody = document.getElementById('management-alert-history-body');
+  const managementAlertRowTemplate = document.getElementById('management-alert-row-template');
+  const managementAlertHistoryMessage = document.getElementById('management-alert-history-message');
+  const managementAlertDetail = document.getElementById('management-alert-detail');
+  const managementAlertDetailTitle = document.getElementById('management-alert-detail-title');
+  const managementAlertDetailTime = document.getElementById('management-alert-detail-time');
+  const managementAlertStatusSelect = document.getElementById('management-alert-status-select');
+  const managementAlertStatusSaveButton = document.getElementById('management-alert-status-save');
+  const managementAlertCommentInput = document.getElementById('management-alert-comment-input');
+  const managementAlertCommentSaveButton = document.getElementById('management-alert-comment-save');
+  const managementAlertCommentMessage = document.getElementById('management-alert-comment-message');
+  const managementAlertCommentsEmpty = document.getElementById('management-alert-comments-empty');
+  const managementAlertCommentsList = document.getElementById('management-alert-comments-list');
 
   const manualForm = document.getElementById('manual-appointment-form');
   const manualEntrySection = document.getElementById('manual-entry');
@@ -73,6 +97,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const manualTimeInput = document.getElementById('manual-time');
   const manualNotesInput = document.getElementById('manual-notes');
   const manualSubmitButton = document.getElementById('manual-submit');
+  const managementAlertModal = document.getElementById('management-alert-modal');
+  const managementAlertTitle = document.getElementById('management-alert-title');
+  const managementAlertText = document.getElementById('management-alert-text');
+  const managementAlertTime = document.getElementById('management-alert-time');
+  const dismissManagementAlertButton = document.getElementById('dismiss-management-alert');
 
   let manualFormMessage = document.getElementById('manual-form-message');
   if (!manualFormMessage && manualForm) {
@@ -85,6 +114,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let dashboardInitialized = false;
   let currentStaffProfile = null;
+  let currentUserId = '';
+  let managementAlertChannel = null;
+  let managementAlerts = [];
+  let selectedManagementAlertId = '';
+  let pendingManagementAlerts = [];
+  let activeManagementAlert = null;
 
   if (!supabaseClient) {
     if (loginMessage) {
@@ -104,6 +139,10 @@ document.addEventListener('DOMContentLoaded', () => {
       loginButton.textContent = translate('admin.login', 'Login');
     }
 
+    if (pingManagementButton && !pingManagementButton.disabled) {
+      pingManagementButton.textContent = translate('admin.pingManagement', 'Ping Management');
+    }
+
     if (manualSubmitButton && !manualSubmitButton.disabled) {
       manualSubmitButton.textContent = translate('admin.submit', 'Submit');
     }
@@ -112,12 +151,29 @@ document.addEventListener('DOMContentLoaded', () => {
       setManualFormMessage('', undefined);
     }
 
+    if (pingManagementMessage && pingManagementMessage.textContent) {
+      setPingManagementMessage('', undefined);
+    }
+
+    if (managementAlertHistoryMessage && managementAlertHistoryMessage.textContent) {
+      setManagementAlertHistoryMessage('', undefined);
+    }
+
+    if (managementAlertCommentMessage && managementAlertCommentMessage.textContent) {
+      setManagementAlertCommentMessage('', undefined);
+    }
+
+    renderActiveManagementAlert();
+    renderManagementAlertHistory();
+    renderSelectedManagementAlert();
+
     if (!currentStaffProfile) {
       return;
     }
 
     if (isManagementRole()) {
       loadComplaints();
+      void refreshManagementAlerts();
       return;
     }
 
@@ -132,6 +188,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (logoutButton) {
       logoutButton.addEventListener('click', handleLogout);
+    }
+
+    if (pingManagementButton) {
+      pingManagementButton.addEventListener('click', handlePingManagementClick);
     }
 
     if (filterDateInput) {
@@ -160,9 +220,31 @@ document.addEventListener('DOMContentLoaded', () => {
       complaintsTableBody.addEventListener('click', handleComplaintAction);
     }
 
+    if (managementAlertHistoryBody) {
+      managementAlertHistoryBody.addEventListener('click', handleManagementAlertHistoryAction);
+    }
+
     if (manualForm) {
       manualForm.addEventListener('submit', handleManualAppointmentSubmit);
     }
+
+    if (managementAlertStatusSaveButton) {
+      managementAlertStatusSaveButton.addEventListener('click', handleManagementAlertStatusSave);
+    }
+
+    if (managementAlertCommentSaveButton) {
+      managementAlertCommentSaveButton.addEventListener('click', handleManagementAlertCommentSave);
+    }
+
+    if (managementAlertModal) {
+      managementAlertModal.addEventListener('click', handleManagementAlertModalClick);
+    }
+
+    if (dismissManagementAlertButton) {
+      dismissManagementAlertButton.addEventListener('click', dismissActiveManagementAlert);
+    }
+
+    document.addEventListener('keydown', handleDocumentKeydown);
   }
 
   async function restoreSessionOnLoad() {
@@ -176,6 +258,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const session = data?.session || null;
 
       if (!session) {
+        currentUserId = '';
+        clearManagementAlertState();
         showLoginView();
         applyRoleUiState();
         return;
@@ -185,8 +269,10 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error('Session restore error:', error);
       await supabaseClient.auth.signOut();
+      currentUserId = '';
       currentStaffProfile = null;
       dashboardInitialized = false;
+      clearManagementAlertState();
       showLoginView();
       applyRoleUiState();
     }
@@ -234,8 +320,10 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error('Login error:', error);
       await supabaseClient.auth.signOut();
+      currentUserId = '';
       currentStaffProfile = null;
       dashboardInitialized = false;
+      clearManagementAlertState();
       setLoginMessage(resolveLoginErrorMessage(error));
       showLoginView();
       applyRoleUiState();
@@ -253,6 +341,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!user?.id) {
       throw new Error('Unable to load authenticated user.');
     }
+
+    currentUserId = user.id;
 
     const staffProfile = await loadStaffProfile(user.id);
 
@@ -300,7 +390,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dashboardInitialized) {
       if (isManagementRole()) {
         await loadComplaints();
+        await refreshManagementAlerts();
+        subscribeToManagementAlerts();
       } else {
+        clearManagementAlertState();
         await loadAppointments();
       }
       return;
@@ -308,10 +401,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (isManagementRole()) {
       await loadComplaints();
+      await refreshManagementAlerts();
+      subscribeToManagementAlerts();
       dashboardInitialized = true;
       return;
     }
 
+    clearManagementAlertState();
     await loadDoctors();
     await loadAppointments();
     dashboardInitialized = true;
@@ -732,7 +828,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  async function handlePingManagementClick() {
+    setPingManagementMessage('');
+
+    if (!isReceptionistRole() || !currentUserId) {
+      return;
+    }
+
+    if (pingManagementButton) {
+      pingManagementButton.disabled = true;
+      pingManagementButton.textContent = translate('admin.pingingManagement', 'Sending alert...');
+    }
+
+    try {
+      const { error } = await supabaseClient
+        .from('management_alerts')
+        .insert({
+          alert_type: 'reception_ping',
+          created_by: currentUserId
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      setPingManagementMessage(translate('admin.pingManagementSuccess', 'Management has been alerted.'), 'success');
+    } catch (error) {
+      console.error('Error alerting management:', error);
+      setPingManagementMessage(
+        translate('admin.pingManagementError', 'Unable to alert management. Please try again.'),
+        'error'
+      );
+    } finally {
+      if (pingManagementButton) {
+        pingManagementButton.disabled = false;
+        pingManagementButton.textContent = translate('admin.pingManagement', 'Ping Management');
+      }
+    }
+  }
+
   async function handleLogout() {
+    clearManagementAlertState();
+    currentUserId = '';
+
     try {
       await supabaseClient.auth.signOut();
     } catch (error) {
@@ -756,6 +894,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     clearLoginMessage();
+    setPingManagementMessage('', undefined);
+    setManagementAlertHistoryMessage('', undefined);
+    setManagementAlertCommentMessage('', undefined);
   }
 
   function showLoginView() {
@@ -805,9 +946,55 @@ document.addEventListener('DOMContentLoaded', () => {
     manualFormMessage.style.color = type === 'success' ? '#1f7a1f' : '#b71f1f';
   }
 
+  function setPingManagementMessage(message, type) {
+    if (!pingManagementMessage) {
+      return;
+    }
+
+    pingManagementMessage.textContent = message;
+
+    if (!message) {
+      pingManagementMessage.style.color = '';
+      return;
+    }
+
+    pingManagementMessage.style.color = type === 'success' ? '#1f7a1f' : '#b71f1f';
+  }
+
+  function setManagementAlertHistoryMessage(message, type) {
+    if (!managementAlertHistoryMessage) {
+      return;
+    }
+
+    managementAlertHistoryMessage.textContent = message;
+
+    if (!message) {
+      managementAlertHistoryMessage.style.color = '';
+      return;
+    }
+
+    managementAlertHistoryMessage.style.color = type === 'success' ? '#1f7a1f' : '#b71f1f';
+  }
+
+  function setManagementAlertCommentMessage(message, type) {
+    if (!managementAlertCommentMessage) {
+      return;
+    }
+
+    managementAlertCommentMessage.textContent = message;
+
+    if (!message) {
+      managementAlertCommentMessage.style.color = '';
+      return;
+    }
+
+    managementAlertCommentMessage.style.color = type === 'success' ? '#1f7a1f' : '#b71f1f';
+  }
+
   function applyRoleUiState() {
     const isDoctor = isDoctorRole();
     const isManagement = isManagementRole();
+    const isReceptionist = isReceptionistRole();
 
     if (loginTitle) {
       loginTitle.textContent = translate('admin.staffLogin', 'Staff Login');
@@ -821,6 +1008,18 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         dashboardTitle.textContent = translate('admin.receptionDashboard', 'Reception Dashboard');
       }
+    }
+
+    if (pingManagementButton) {
+      pingManagementButton.hidden = !isReceptionist;
+    }
+
+    if (pingManagementMessage) {
+      if (!isReceptionist) {
+        setPingManagementMessage('', undefined);
+      }
+
+      pingManagementMessage.hidden = !isReceptionist;
     }
 
     if (manualEntrySection) {
@@ -837,6 +1036,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (complaintsSection) {
       complaintsSection.hidden = !isManagement;
+    }
+
+    if (managementAlertHistorySection) {
+      managementAlertHistorySection.hidden = !isManagement;
+    }
+
+    if (!isManagement) {
+      if (managementAlertDetail) {
+        managementAlertDetail.hidden = true;
+      }
+
+      hideManagementAlertModal();
     }
   }
 
@@ -868,6 +1079,734 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function isManagementRole() {
     return currentStaffProfile?.role === STAFF_ROLES.MANAGEMENT;
+  }
+
+  async function refreshManagementAlerts() {
+    if (!isManagementRole() || !currentUserId) {
+      clearManagementAlertData();
+      return;
+    }
+
+    try {
+      const [alertsResult, receiptsResult, commentsResult] = await Promise.all([
+        supabaseClient
+          .from('management_alerts')
+          .select('id, alert_type, created_at')
+          .order('created_at', { ascending: false }),
+        supabaseClient
+          .from('management_alert_receipts')
+          .select('alert_id, shown_at, dismissed_at, status, status_updated_at, last_viewed_at')
+          .eq('manager_user_id', currentUserId),
+        supabaseClient
+          .from('management_alert_comments')
+          .select('id, alert_id, manager_user_id, note, created_at, updated_at')
+          .order('created_at', { ascending: false })
+      ]);
+
+      if (alertsResult.error) {
+        throw alertsResult.error;
+      }
+
+      if (receiptsResult.error) {
+        throw receiptsResult.error;
+      }
+
+      if (commentsResult.error) {
+        throw commentsResult.error;
+      }
+
+      const receiptMap = new Map();
+      (Array.isArray(receiptsResult.data) ? receiptsResult.data : []).forEach((receipt) => {
+        receiptMap.set(String(receipt.alert_id), receipt);
+      });
+
+      const commentsByAlertId = new Map();
+      (Array.isArray(commentsResult.data) ? commentsResult.data : []).forEach((comment) => {
+        const alertId = String(comment.alert_id || '');
+        if (!commentsByAlertId.has(alertId)) {
+          commentsByAlertId.set(alertId, []);
+        }
+
+        commentsByAlertId.get(alertId).push(comment);
+      });
+
+      managementAlerts = (Array.isArray(alertsResult.data) ? alertsResult.data : [])
+        .map((alert) => normalizeManagementAlert(alert, receiptMap.get(String(alert.id)), commentsByAlertId.get(String(alert.id)) || []))
+        .filter(Boolean);
+
+      if (selectedManagementAlertId && !managementAlerts.some((alert) => alert.id === selectedManagementAlertId)) {
+        selectedManagementAlertId = '';
+      }
+
+      if (!selectedManagementAlertId && managementAlerts.length > 0) {
+        selectedManagementAlertId = managementAlerts[0].id;
+      }
+
+      syncManagementAlertQueue(managementAlerts);
+      renderManagementAlertHistory();
+      renderSelectedManagementAlert();
+    } catch (error) {
+      console.error('Error loading management alerts:', error);
+      clearManagementAlertData();
+      setManagementAlertHistoryMessage(
+        translate('admin.managementAlertLoadError', 'Unable to load management alerts right now.'),
+        'error'
+      );
+    }
+  }
+
+  function subscribeToManagementAlerts() {
+    if (!isManagementRole() || !currentUserId || managementAlertChannel) {
+      return;
+    }
+
+    managementAlertChannel = supabaseClient
+      .channel(`management-alerts-${currentUserId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'management_alerts'
+        },
+        () => {
+          void refreshManagementAlerts();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'management_alert_receipts'
+        },
+        () => {
+          void refreshManagementAlerts();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'management_alert_comments'
+        },
+        () => {
+          void refreshManagementAlerts();
+        }
+      )
+      .subscribe();
+  }
+
+  function clearManagementAlertState() {
+    teardownManagementAlertSubscription();
+    clearManagementAlertData();
+    hideManagementAlertModal();
+  }
+
+  function clearManagementAlertData() {
+    managementAlerts = [];
+    selectedManagementAlertId = '';
+    setManagementAlertHistoryMessage('', undefined);
+    setManagementAlertCommentMessage('', undefined);
+    clearQueuedManagementAlerts();
+    renderManagementAlertHistory();
+    renderSelectedManagementAlert();
+  }
+
+  function clearQueuedManagementAlerts() {
+    pendingManagementAlerts = [];
+    activeManagementAlert = null;
+  }
+
+  function teardownManagementAlertSubscription() {
+    if (!managementAlertChannel) {
+      return;
+    }
+
+    supabaseClient.removeChannel(managementAlertChannel);
+    managementAlertChannel = null;
+  }
+
+  function syncManagementAlertQueue(alerts) {
+    const normalizedAlerts = alerts
+      .filter(Boolean)
+      .sort((leftAlert, rightAlert) => new Date(rightAlert.createdAt) - new Date(leftAlert.createdAt))
+      .filter((alert) => alert.statusValue === 'new');
+
+    const seenAlertIds = new Set();
+    const dedupedAlerts = normalizedAlerts.filter((alert) => {
+      if (seenAlertIds.has(alert.id)) {
+        return false;
+      }
+
+      seenAlertIds.add(alert.id);
+      return true;
+    });
+
+    const activeAlertId = activeManagementAlert?.id || '';
+    const updatedActiveAlert = dedupedAlerts.find((alert) => alert.id === activeAlertId) || null;
+
+    activeManagementAlert = updatedActiveAlert || activeManagementAlert;
+    pendingManagementAlerts = dedupedAlerts.filter((alert) => alert.id !== activeAlertId);
+
+    if (!activeManagementAlert) {
+      showNextManagementAlert();
+      return;
+    }
+
+    renderActiveManagementAlert();
+  }
+
+  function enqueueManagementAlert(alert) {
+    const normalizedAlert = normalizeManagementAlert(alert);
+    if (!normalizedAlert) {
+      return;
+    }
+
+    if (activeManagementAlert?.id === normalizedAlert.id) {
+      return;
+    }
+
+    if (pendingManagementAlerts.some((queuedAlert) => queuedAlert.id === normalizedAlert.id)) {
+      return;
+    }
+
+    pendingManagementAlerts = [normalizedAlert, ...pendingManagementAlerts].sort(
+      (leftAlert, rightAlert) => new Date(rightAlert.createdAt) - new Date(leftAlert.createdAt)
+    );
+
+    if (!activeManagementAlert) {
+      showNextManagementAlert();
+    }
+  }
+
+  function normalizeManagementAlert(alert, receipt, comments) {
+    if (!alert?.id) {
+      return null;
+    }
+
+    const normalizedComments = Array.isArray(comments)
+      ? comments
+        .slice()
+        .sort((leftComment, rightComment) => new Date(rightComment.created_at) - new Date(leftComment.created_at))
+      : [];
+
+    const statusValue = mapManagementAlertStatusToValue(receipt?.status || 'New');
+
+    return {
+      id: String(alert.id),
+      alertType: String(alert.alert_type || 'reception_ping').trim().toLowerCase(),
+      createdAt: alert.created_at || new Date().toISOString(),
+      shownAt: receipt?.shown_at || '',
+      dismissedAt: receipt?.dismissed_at || '',
+      statusValue,
+      statusLabel: translate(resolveManagementAlertStatusLabelKey(statusValue), mapManagementAlertStatusToDb(statusValue)),
+      statusUpdatedAt: receipt?.status_updated_at || '',
+      lastViewedAt: receipt?.last_viewed_at || '',
+      comments: normalizedComments,
+      notesCount: normalizedComments.length
+    };
+  }
+
+  function renderManagementAlertHistory() {
+    if (!managementAlertHistoryBody) {
+      return;
+    }
+
+    managementAlertHistoryBody.innerHTML = '';
+
+    if (managementAlerts.length === 0) {
+      const emptyRow = document.createElement('tr');
+      const emptyCell = document.createElement('td');
+      emptyCell.colSpan = 5;
+      emptyCell.textContent = translate('admin.managementAlertHistoryEmpty', 'No management alerts yet.');
+      emptyRow.appendChild(emptyCell);
+      managementAlertHistoryBody.appendChild(emptyRow);
+      return;
+    }
+
+    managementAlerts.forEach((alert) => {
+      const row = buildManagementAlertHistoryRow(alert);
+      managementAlertHistoryBody.appendChild(row);
+    });
+  }
+
+  function buildManagementAlertHistoryRow(alert) {
+    let row;
+
+    if (managementAlertRowTemplate && 'content' in managementAlertRowTemplate) {
+      const fragment = managementAlertRowTemplate.content.cloneNode(true);
+      row = fragment.querySelector('tr');
+    }
+
+    if (!row) {
+      row = document.createElement('tr');
+    }
+
+    row.dataset.alertId = alert.id;
+    row.classList.toggle('management-alert-row--selected', alert.id === selectedManagementAlertId);
+
+    const alertTypeCell = row.querySelector('[data-field="alert-type"]');
+    const createdAtCell = row.querySelector('[data-field="created-at"]');
+    const statusBadge = row.querySelector('[data-field="status-badge"]');
+    const notesCountCell = row.querySelector('[data-field="notes-count"]');
+    const openButton = row.querySelector('button[data-action="select-management-alert"]');
+
+    if (alertTypeCell) {
+      alertTypeCell.textContent = translate('admin.managementAlertTypeReceptionPing', 'Reception Ping');
+    }
+
+    if (createdAtCell) {
+      createdAtCell.textContent = formatReportedAt(alert.createdAt);
+    }
+
+    if (statusBadge) {
+      statusBadge.textContent = alert.statusLabel;
+      statusBadge.dataset.status = alert.statusValue;
+    }
+
+    if (notesCountCell) {
+      notesCountCell.textContent = String(alert.notesCount);
+    }
+
+    if (openButton) {
+      openButton.textContent = translate('admin.openAlert', 'Open');
+    }
+
+    return row;
+  }
+
+  function renderSelectedManagementAlert() {
+    if (!managementAlertDetail || !managementAlertDetailTitle || !managementAlertDetailTime || !managementAlertStatusSelect) {
+      return;
+    }
+
+    const selectedAlert = getSelectedManagementAlert();
+    if (!selectedAlert) {
+      managementAlertDetail.hidden = true;
+      if (managementAlertCommentInput) {
+        managementAlertCommentInput.value = '';
+      }
+      return;
+    }
+
+    managementAlertDetail.hidden = false;
+    managementAlertDetailTitle.textContent = translate('admin.managementAlertTitle', 'Reception needs management assistance');
+    managementAlertDetailTime.textContent = `${translate('admin.managementAlertTime', 'Sent at')} ${formatReportedAt(selectedAlert.createdAt)}`.trim();
+    localizeSelectOptions(managementAlertStatusSelect, MANAGEMENT_ALERT_STATUS_OPTIONS, 'admin.managementAlertStatusAria', 'Alert Status');
+    managementAlertStatusSelect.value = selectedAlert.statusValue;
+    managementAlertStatusSelect.disabled = false;
+
+    if (managementAlertStatusSaveButton) {
+      managementAlertStatusSaveButton.textContent = translate('admin.saveAlertStatus', 'Save Status');
+      managementAlertStatusSaveButton.disabled = false;
+    }
+
+    if (managementAlertCommentInput) {
+      managementAlertCommentInput.placeholder = translate('admin.managementAlertCommentPlaceholder', 'Add a note for this alert');
+    }
+
+    if (managementAlertCommentSaveButton) {
+      managementAlertCommentSaveButton.textContent = translate('admin.addAlertNote', 'Add Note');
+      managementAlertCommentSaveButton.disabled = false;
+    }
+
+    renderManagementAlertComments(selectedAlert);
+  }
+
+  function renderManagementAlertComments(alert) {
+    if (!managementAlertCommentsList || !managementAlertCommentsEmpty) {
+      return;
+    }
+
+    managementAlertCommentsList.innerHTML = '';
+
+    if (!Array.isArray(alert.comments) || alert.comments.length === 0) {
+      managementAlertCommentsEmpty.hidden = false;
+      return;
+    }
+
+    managementAlertCommentsEmpty.hidden = true;
+
+    alert.comments.forEach((comment) => {
+      const listItem = document.createElement('li');
+      listItem.className = 'management-alert-comments__item';
+
+      const meta = document.createElement('p');
+      meta.className = 'management-alert-comments__meta';
+      const authorLabel = comment.manager_user_id === currentUserId
+        ? translate('admin.you', 'You')
+        : translate('admin.managementTeam', 'Management');
+      meta.textContent = `${authorLabel} | ${formatReportedAt(comment.created_at)}`;
+
+      const body = document.createElement('p');
+      body.className = 'management-alert-comments__body';
+      body.textContent = comment.note || '';
+
+      listItem.appendChild(meta);
+      listItem.appendChild(body);
+      managementAlertCommentsList.appendChild(listItem);
+    });
+  }
+
+  function getSelectedManagementAlert() {
+    if (!selectedManagementAlertId) {
+      return null;
+    }
+
+    return managementAlerts.find((alert) => alert.id === selectedManagementAlertId) || null;
+  }
+
+  function handleManagementAlertHistoryAction(event) {
+    const target = event.target;
+
+    if (!(target instanceof HTMLElement) || target.dataset.action !== 'select-management-alert') {
+      return;
+    }
+
+    const row = target.closest('tr');
+    const alertId = row?.dataset.alertId || '';
+    if (!alertId) {
+      return;
+    }
+
+    selectedManagementAlertId = alertId;
+    setManagementAlertHistoryMessage('', undefined);
+    setManagementAlertCommentMessage('', undefined);
+    renderManagementAlertHistory();
+    renderSelectedManagementAlert();
+  }
+
+  async function handleManagementAlertStatusSave() {
+    const selectedAlert = getSelectedManagementAlert();
+    const nextStatusValue = managementAlertStatusSelect?.value || '';
+
+    if (!selectedAlert || !nextStatusValue || !currentUserId || !isManagementRole()) {
+      return;
+    }
+
+    if (managementAlertStatusSaveButton) {
+      managementAlertStatusSaveButton.disabled = true;
+      managementAlertStatusSaveButton.textContent = translate('admin.savingAlertStatus', 'Saving...');
+    }
+
+    try {
+      const timestamp = new Date().toISOString();
+      const { error } = await supabaseClient
+        .from('management_alert_receipts')
+        .upsert(
+          {
+            alert_id: Number(selectedAlert.id),
+            manager_user_id: currentUserId,
+            shown_at: selectedAlert.shownAt || timestamp,
+            last_viewed_at: timestamp,
+            status: mapManagementAlertStatusToDb(nextStatusValue),
+            status_updated_at: timestamp,
+            updated_at: timestamp
+          },
+          {
+            onConflict: 'alert_id,manager_user_id'
+          }
+        );
+
+      if (error) {
+        throw error;
+      }
+
+      setManagementAlertHistoryMessage(
+        translate('admin.managementAlertStatusSaved', 'Alert status updated.'),
+        'success'
+      );
+
+      await refreshManagementAlerts();
+    } catch (error) {
+      console.error('Error updating management alert status:', error);
+      setManagementAlertHistoryMessage(
+        translate('admin.managementAlertStatusError', 'Unable to update alert status right now.'),
+        'error'
+      );
+    } finally {
+      if (managementAlertStatusSaveButton) {
+        managementAlertStatusSaveButton.disabled = false;
+        managementAlertStatusSaveButton.textContent = translate('admin.saveAlertStatus', 'Save Status');
+      }
+    }
+  }
+
+  async function handleManagementAlertCommentSave() {
+    const selectedAlert = getSelectedManagementAlert();
+    const note = String(managementAlertCommentInput?.value || '').trim();
+
+    setManagementAlertCommentMessage('', undefined);
+
+    if (!selectedAlert || !note || !currentUserId || !isManagementRole()) {
+      if (!note) {
+        setManagementAlertCommentMessage(
+          translate('admin.managementAlertNoteRequired', 'Please enter a note before saving.'),
+          'error'
+        );
+      }
+      return;
+    }
+
+    if (managementAlertCommentSaveButton) {
+      managementAlertCommentSaveButton.disabled = true;
+      managementAlertCommentSaveButton.textContent = translate('admin.savingAlertNote', 'Saving note...');
+    }
+
+    try {
+      const timestamp = new Date().toISOString();
+
+      const { error: receiptError } = await supabaseClient
+        .from('management_alert_receipts')
+        .upsert(
+          {
+            alert_id: Number(selectedAlert.id),
+            manager_user_id: currentUserId,
+            shown_at: selectedAlert.shownAt || timestamp,
+            last_viewed_at: timestamp,
+            updated_at: timestamp
+          },
+          {
+            onConflict: 'alert_id,manager_user_id'
+          }
+        );
+
+      if (receiptError) {
+        throw receiptError;
+      }
+
+      const { error } = await supabaseClient
+        .from('management_alert_comments')
+        .insert({
+          alert_id: Number(selectedAlert.id),
+          manager_user_id: currentUserId,
+          note
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      if (managementAlertCommentInput) {
+        managementAlertCommentInput.value = '';
+      }
+
+      setManagementAlertCommentMessage(
+        translate('admin.managementAlertNoteSaved', 'Note added to alert history.'),
+        'success'
+      );
+
+      await refreshManagementAlerts();
+    } catch (error) {
+      console.error('Error saving management alert note:', error);
+      setManagementAlertCommentMessage(
+        translate('admin.managementAlertNoteError', 'Unable to save this note right now.'),
+        'error'
+      );
+    } finally {
+      if (managementAlertCommentSaveButton) {
+        managementAlertCommentSaveButton.disabled = false;
+        managementAlertCommentSaveButton.textContent = translate('admin.addAlertNote', 'Add Note');
+      }
+    }
+  }
+
+  function showNextManagementAlert() {
+    if (!isManagementRole()) {
+      return;
+    }
+
+    const nextAlert = pendingManagementAlerts.shift() || null;
+    activeManagementAlert = nextAlert;
+
+    if (!nextAlert) {
+      hideManagementAlertModal();
+      return;
+    }
+
+    renderActiveManagementAlert();
+    showManagementAlertModal();
+    void markManagementAlertShown(nextAlert.id);
+  }
+
+  function renderActiveManagementAlert() {
+    if (!managementAlertTitle || !managementAlertText || !managementAlertTime || !dismissManagementAlertButton) {
+      return;
+    }
+
+    if (!activeManagementAlert) {
+      managementAlertTitle.textContent = translate('admin.managementAlertTitle', 'Reception needs management assistance');
+      managementAlertText.textContent = translate(
+        'admin.managementAlertBody',
+        'Reception has requested immediate support at the front desk.'
+      );
+      managementAlertTime.textContent = '';
+      dismissManagementAlertButton.textContent = translate('admin.dismissAlert', 'Dismiss');
+      return;
+    }
+
+    managementAlertTitle.textContent = translate('admin.managementAlertTitle', 'Reception needs management assistance');
+    managementAlertText.textContent = translate(
+      'admin.managementAlertBody',
+      'Reception has requested immediate support at the front desk.'
+    );
+    managementAlertTime.textContent = `${translate('admin.managementAlertTime', 'Sent at')} ${formatReportedAt(activeManagementAlert.createdAt)}`.trim();
+    dismissManagementAlertButton.textContent = translate('admin.dismissAlert', 'Dismiss');
+  }
+
+  async function markManagementAlertShown(alertId) {
+    if (!alertId || !currentUserId || !isManagementRole()) {
+      return;
+    }
+
+    try {
+      const timestamp = new Date().toISOString();
+      const { error } = await supabaseClient
+        .from('management_alert_receipts')
+        .upsert(
+          {
+            alert_id: Number(alertId),
+            manager_user_id: currentUserId,
+            shown_at: timestamp,
+            last_viewed_at: timestamp,
+            updated_at: timestamp
+          },
+          {
+            onConflict: 'alert_id,manager_user_id'
+          }
+        );
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error marking management alert as shown:', error);
+    }
+  }
+
+  async function dismissActiveManagementAlert() {
+    if (!activeManagementAlert || !currentUserId || !isManagementRole()) {
+      hideManagementAlertModal();
+      return;
+    }
+
+    if (dismissManagementAlertButton) {
+      dismissManagementAlertButton.disabled = true;
+    }
+
+    try {
+      const timestamp = new Date().toISOString();
+      const { error } = await supabaseClient
+        .from('management_alert_receipts')
+        .upsert(
+          {
+            alert_id: Number(activeManagementAlert.id),
+            manager_user_id: currentUserId,
+            shown_at: timestamp,
+            last_viewed_at: timestamp,
+            status: 'Acknowledged',
+            status_updated_at: timestamp,
+            updated_at: timestamp
+          },
+          {
+            onConflict: 'alert_id,manager_user_id'
+          }
+        );
+
+      if (error) {
+        throw error;
+      }
+
+      activeManagementAlert = null;
+      hideManagementAlertModal();
+      setManagementAlertHistoryMessage(
+        translate('admin.managementAlertStatusSaved', 'Alert status updated.'),
+        'success'
+      );
+      await refreshManagementAlerts();
+    } catch (error) {
+      console.error('Error dismissing management alert:', error);
+    } finally {
+      if (dismissManagementAlertButton) {
+        dismissManagementAlertButton.disabled = false;
+      }
+
+      renderActiveManagementAlert();
+    }
+  }
+
+  function handleManagementAlertModalClick(event) {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    if (target.dataset.action !== 'dismiss-management-alert') {
+      return;
+    }
+
+    void dismissActiveManagementAlert();
+  }
+
+  function handleDocumentKeydown(event) {
+    if (event.key !== 'Escape' || !activeManagementAlert || managementAlertModal?.hidden) {
+      return;
+    }
+
+    event.preventDefault();
+    void dismissActiveManagementAlert();
+  }
+
+  function showManagementAlertModal() {
+    if (!managementAlertModal) {
+      return;
+    }
+
+    managementAlertModal.hidden = false;
+    document.body.classList.add('language-modal-open');
+
+    if (dismissManagementAlertButton) {
+      dismissManagementAlertButton.focus();
+    }
+  }
+
+  function hideManagementAlertModal() {
+    if (managementAlertModal) {
+      managementAlertModal.hidden = true;
+    }
+
+    document.body.classList.remove('language-modal-open');
+  }
+
+  function mapManagementAlertStatusToDb(value) {
+    const normalizedValue = String(value || '').trim().toLowerCase();
+
+    const matchedStatus = MANAGEMENT_ALERT_STATUS_OPTIONS.find(
+      (statusOption) => statusOption.value === normalizedValue || statusOption.dbLabel.toLowerCase() === normalizedValue
+    );
+
+    return matchedStatus ? matchedStatus.dbLabel : 'New';
+  }
+
+  function mapManagementAlertStatusToValue(value) {
+    const normalizedValue = String(value || '').trim().toLowerCase();
+
+    if (!normalizedValue) {
+      return 'new';
+    }
+
+    const matchedStatus = MANAGEMENT_ALERT_STATUS_OPTIONS.find(
+      (statusOption) => statusOption.value === normalizedValue || statusOption.dbLabel.toLowerCase() === normalizedValue
+    );
+
+    return matchedStatus ? matchedStatus.value : 'new';
+  }
+
+  function resolveManagementAlertStatusLabelKey(value) {
+    const matchedStatus = MANAGEMENT_ALERT_STATUS_OPTIONS.find((statusOption) => statusOption.value === value);
+    return matchedStatus ? matchedStatus.labelKey : 'admin.managementAlertStatus.new';
   }
 
   function resolveLoginErrorMessage(error) {

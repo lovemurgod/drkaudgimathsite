@@ -52,8 +52,14 @@
 
     <section id="dashboard-view" aria-labelledby="dashboard-title" hidden>
       <header class="dashboard-top-bar">
-        <h2 id="dashboard-title" data-i18n="admin.staffDashboard">Staff Dashboard</h2>
-        <button type="button" id="logout-button" data-i18n="admin.logout">Logout</button>
+        <div class="dashboard-top-bar__details">
+          <h2 id="dashboard-title" data-i18n="admin.staffDashboard">Staff Dashboard</h2>
+          <p id="ping-management-message" class="dashboard-status-message" role="status" aria-live="polite"></p>
+        </div>
+        <div class="dashboard-top-bar__actions">
+          <button type="button" id="ping-management-button" data-i18n="admin.pingManagement" hidden>Ping Management</button>
+          <button type="button" id="logout-button" data-i18n="admin.logout">Logout</button>
+        </div>
       </header>
 
       <section id="filters-section" aria-labelledby="filters-title">
@@ -173,6 +179,87 @@
         </template>
       </section>
 
+      <section id="management-alert-history" aria-labelledby="management-alert-history-title" hidden>
+        <div class="management-alert-history__header">
+          <div>
+            <h3 id="management-alert-history-title" data-i18n="admin.managementAlertHistory">Management Alerts</h3>
+            <p class="management-alert-history__intro" data-i18n="admin.managementAlertHistoryIntro">Review reception pings, update status, and maintain note history.</p>
+          </div>
+          <p id="management-alert-history-message" class="dashboard-status-message" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="management-alert-history__layout">
+          <div class="table-responsive">
+            <table>
+              <caption class="sr-only" data-i18n="admin.managementAlertHistoryCaption">Management alert history list</caption>
+              <thead>
+                <tr>
+                  <th scope="col" data-i18n="admin.managementAlertColumn.alert">Alert</th>
+                  <th scope="col" data-i18n="admin.managementAlertColumn.sentAt">Sent At</th>
+                  <th scope="col" data-i18n="admin.managementAlertColumn.status">Status</th>
+                  <th scope="col" data-i18n="admin.managementAlertColumn.notes">Notes</th>
+                  <th scope="col" data-i18n="admin.field.actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="management-alert-history-body"></tbody>
+            </table>
+          </div>
+
+          <aside id="management-alert-detail" class="management-alert-detail" aria-labelledby="management-alert-detail-title" hidden>
+            <div class="management-alert-detail__header">
+              <div>
+                <p class="management-alert-detail__eyebrow" data-i18n="admin.managementAlertDetail">Alert Details</p>
+                <h4 id="management-alert-detail-title" data-i18n="admin.managementAlertTitle">Reception needs management assistance</h4>
+              </div>
+              <p id="management-alert-detail-time" class="management-alert-detail__time"></p>
+            </div>
+
+            <div class="management-alert-detail__controls">
+              <div>
+                <label for="management-alert-status-select" data-i18n="admin.field.status">Status</label>
+                <select id="management-alert-status-select" name="management-alert-status">
+                  <option value="new" data-i18n="admin.managementAlertStatus.new">New</option>
+                  <option value="acknowledged" data-i18n="admin.managementAlertStatus.acknowledged">Acknowledged</option>
+                  <option value="in-progress" data-i18n="admin.managementAlertStatus.inProgress">In Progress</option>
+                  <option value="resolved" data-i18n="admin.managementAlertStatus.resolved">Resolved</option>
+                  <option value="rejected" data-i18n="admin.managementAlertStatus.rejected">Rejected</option>
+                </select>
+              </div>
+              <button type="button" id="management-alert-status-save" data-i18n="admin.saveAlertStatus">Save Status</button>
+            </div>
+
+            <div class="management-alert-detail__comment-form">
+              <label for="management-alert-comment-input" data-i18n="admin.managementAlertAddNote">Add Note</label>
+              <textarea id="management-alert-comment-input" name="management-alert-comment" rows="4"></textarea>
+              <div class="management-alert-detail__comment-actions">
+                <button type="button" id="management-alert-comment-save" data-i18n="admin.addAlertNote">Add Note</button>
+                <p id="management-alert-comment-message" class="dashboard-status-message" role="status" aria-live="polite"></p>
+              </div>
+            </div>
+
+            <div class="management-alert-detail__comments">
+              <h5 data-i18n="admin.managementAlertNotes">Note History</h5>
+              <p id="management-alert-comments-empty" data-i18n="admin.managementAlertNotesEmpty">No notes added yet.</p>
+              <ul id="management-alert-comments-list" class="management-alert-comments"></ul>
+            </div>
+          </aside>
+        </div>
+
+        <template id="management-alert-row-template">
+          <tr>
+            <td data-field="alert-type"></td>
+            <td data-field="created-at"></td>
+            <td>
+              <span data-field="status-badge" class="management-alert-status-badge"></span>
+            </td>
+            <td data-field="notes-count"></td>
+            <td>
+              <button type="button" data-action="select-management-alert" data-i18n="admin.openAlert">Open</button>
+            </td>
+          </tr>
+        </template>
+      </section>
+
       <section id="manual-entry" aria-labelledby="manual-entry-title">
         <h3 id="manual-entry-title" data-i18n="admin.manualEntry">Manual Appointment Entry</h3>
 
@@ -217,6 +304,27 @@
 
           <button type="submit" id="manual-submit" data-i18n="admin.submit">Submit</button>
         </form>
+      </section>
+
+      <section
+        id="management-alert-modal"
+        class="language-modal management-alert-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="management-alert-title"
+        aria-describedby="management-alert-text"
+        hidden
+      >
+        <div class="language-modal__backdrop" data-action="dismiss-management-alert"></div>
+        <div class="language-modal__card management-alert-modal__card">
+          <p class="management-alert-modal__eyebrow" data-i18n="admin.managementAlertLabel">Management Alert</p>
+          <h3 id="management-alert-title" data-i18n="admin.managementAlertTitle">Reception needs management assistance</h3>
+          <p id="management-alert-text" data-i18n="admin.managementAlertBody">Reception has requested immediate support at the front desk.</p>
+          <p id="management-alert-time" class="management-alert-modal__time"></p>
+          <div class="management-alert-modal__actions">
+            <button type="button" id="dismiss-management-alert" data-i18n="admin.dismissAlert">Dismiss</button>
+          </div>
+        </div>
       </section>
     </section>
   </main>

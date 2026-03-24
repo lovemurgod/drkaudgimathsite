@@ -990,7 +990,9 @@ p {
 
 .admin-page #login-button,
 .admin-page #manual-submit,
-.admin-page [data-action='update-status'] {
+.admin-page [data-action='update-status'],
+.admin-page #management-alert-status-save,
+.admin-page #management-alert-comment-save {
   background: var(--color-primary);
   color: #fff;
   box-shadow: 0 8px 18px rgba(13, 50, 77, 0.1);
@@ -998,7 +1000,9 @@ p {
 
 .admin-page #login-button:hover,
 .admin-page #manual-submit:hover,
-.admin-page [data-action='update-status']:hover {
+.admin-page [data-action='update-status']:hover,
+.admin-page #management-alert-status-save:hover,
+.admin-page #management-alert-comment-save:hover {
   background: var(--color-primary-dark);
   transform: translateY(-1px);
 }
@@ -1007,6 +1011,17 @@ p {
   background: transparent;
   color: var(--color-primary);
   border-color: var(--color-primary);
+}
+
+.admin-page #ping-management-button {
+  background: #d62828;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(214, 40, 40, 0.18);
+}
+
+.admin-page #ping-management-button:hover {
+  background: #b61f1f;
+  transform: translateY(-1px);
 }
 
 .admin-page #logout-button:hover {
@@ -1042,6 +1057,27 @@ p {
   gap: 0.8rem;
 }
 
+.admin-page .dashboard-top-bar__details {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.admin-page .dashboard-top-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.admin-page .dashboard-status-message {
+  min-height: 1.2rem;
+  margin: 0;
+  font-size: 0.94rem;
+  font-weight: 600;
+}
+
 .admin-page #dashboard-title {
   margin-bottom: 0;
   padding-bottom: 0;
@@ -1054,6 +1090,7 @@ p {
 .admin-page #filters-title,
 .admin-page #appointments-title,
 .admin-page #complaints-title,
+.admin-page #management-alert-history-title,
 .admin-page #manual-entry-title {
   margin-bottom: 0.95rem;
   font-size: 1.15rem;
@@ -1119,7 +1156,236 @@ p {
   padding: 0.42rem 0.72rem;
 }
 
+.admin-page .management-alert-modal__card {
+  width: min(100%, 520px);
+}
+
+.admin-page .management-alert-modal__eyebrow {
+  margin: 0 0 0.4rem;
+  color: #b61f1f;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-page #management-alert-title {
+  margin-bottom: 0.6rem;
+}
+
+.admin-page #management-alert-text {
+  margin-bottom: 0.7rem;
+  color: #2d4659;
+}
+
+.admin-page .management-alert-modal__time {
+  margin: 0;
+  color: #51697b;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.admin-page .management-alert-modal__actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.admin-page .management-alert-history__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-page .management-alert-history__intro {
+  margin: 0;
+  color: #51697b;
+}
+
+.admin-page .management-alert-history__layout {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+  align-items: start;
+}
+
+.admin-page .management-alert-row--selected {
+  background: #eef8fe;
+}
+
+.admin-page .management-alert-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 118px;
+  min-height: 34px;
+  border-radius: 999px;
+  padding: 0.25rem 0.8rem;
+  background: #edf4f8;
+  color: #20425a;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.admin-page .management-alert-status-badge[data-status='new'] {
+  background: #fff1da;
+  color: #9b5d00;
+}
+
+.admin-page .management-alert-status-badge[data-status='acknowledged'] {
+  background: #e8f5f9;
+  color: #0d566d;
+}
+
+.admin-page .management-alert-status-badge[data-status='in-progress'] {
+  background: #e8f0ff;
+  color: #2446a8;
+}
+
+.admin-page .management-alert-status-badge[data-status='resolved'] {
+  background: #e7f8ee;
+  color: #1f7a1f;
+}
+
+.admin-page .management-alert-status-badge[data-status='rejected'] {
+  background: #fdeaea;
+  color: #b71f1f;
+}
+
+.admin-page [data-action='select-management-alert'] {
+  min-height: 36px;
+  padding: 0.42rem 0.72rem;
+  background: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.admin-page [data-action='select-management-alert']:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.admin-page .management-alert-detail {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: #fff;
+  padding: 1rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-page .management-alert-detail__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-page .management-alert-detail__eyebrow {
+  margin: 0 0 0.35rem;
+  color: #0d566d;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-page .management-alert-detail__time {
+  margin: 0;
+  color: #51697b;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.admin-page .management-alert-detail__controls {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.admin-page .management-alert-detail__comment-form {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-page .management-alert-detail__comment-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.admin-page .management-alert-detail__comments h5 {
+  margin-bottom: 0.75rem;
+}
+
+.admin-page .management-alert-comments {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-page .management-alert-comments__item {
+  border: 1px solid #dbe9f2;
+  border-radius: 10px;
+  background: #f9fcfe;
+  padding: 0.75rem 0.8rem;
+}
+
+.admin-page .management-alert-comments__meta {
+  margin: 0 0 0.35rem;
+  color: #51697b;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.admin-page .management-alert-comments__body {
+  margin: 0;
+  color: #2d4659;
+  white-space: pre-wrap;
+}
+
+.admin-page #dismiss-management-alert {
+  min-width: 128px;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.admin-page #dismiss-management-alert:hover {
+  background: var(--color-primary-dark);
+}
+
 @media (max-width: 767px) {
+  .admin-page .dashboard-top-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-page .dashboard-top-bar__actions {
+    justify-content: stretch;
+  }
+
+  .admin-page .dashboard-top-bar__actions > button {
+    width: 100%;
+  }
+
+  .admin-page .management-alert-history__header,
+  .admin-page .management-alert-detail__header,
+  .admin-page .management-alert-detail__comment-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-page .management-alert-history__layout,
+  .admin-page .management-alert-detail__controls {
+    grid-template-columns: 1fr;
+  }
+
   .legacy__image {
     object-position: center top;
   }
