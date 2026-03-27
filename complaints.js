@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const incidentDetailsInput = document.getElementById('incident_details');
 
   const supabaseClient =
+    (window.publicSupabaseClient && typeof window.publicSupabaseClient.from === 'function' && window.publicSupabaseClient) ||
     (window.supabaseClient && typeof window.supabaseClient.from === 'function' && window.supabaseClient) ||
     (window.supabase && typeof window.supabase.from === 'function' && window.supabase) ||
     (window.supabase && window.supabase.client && typeof window.supabase.client.from === 'function' && window.supabase.client) ||

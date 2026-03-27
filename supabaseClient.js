@@ -8,6 +8,17 @@
   }
 
   const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const publicClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false
+    }
+  });
+
+  window.supabaseUrl = SUPABASE_URL;
+  window.supabaseAnonKey = SUPABASE_ANON_KEY;
   window.supabaseClient = client;
+  window.publicSupabaseClient = publicClient;
   window.supabase = client;
 })();
