@@ -179,6 +179,143 @@
         </template>
       </section>
 
+      <section id="feedback-section" aria-labelledby="feedback-section-title" hidden>
+        <div class="management-alert-history__header">
+          <div>
+            <h3 id="feedback-section-title" data-i18n="admin.feedbackTitle">Patient Feedback</h3>
+            <p class="management-alert-history__intro" data-i18n="admin.feedbackIntro">Review patient satisfaction trends, identify service issues, and follow up when needed.</p>
+          </div>
+          <p id="feedback-message" class="dashboard-status-message" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="feedback-summary" aria-label="Patient feedback summary" data-i18n-attr="aria-label:admin.feedbackSummaryAria">
+          <article class="feedback-summary__card">
+            <p class="feedback-summary__label" data-i18n="admin.feedbackSummary.total">Responses</p>
+            <strong id="feedback-summary-total" class="feedback-summary__value">0</strong>
+            <p class="feedback-summary__meta" data-i18n="admin.feedbackSummary.totalHint">All submitted responses</p>
+          </article>
+          <article class="feedback-summary__card">
+            <p class="feedback-summary__label" data-i18n="admin.feedbackSummary.overall">Average overall rating</p>
+            <strong id="feedback-summary-overall" class="feedback-summary__value">0.0/5</strong>
+            <p class="feedback-summary__meta" data-i18n="admin.feedbackSummary.overallHint">Based on overall confidence scores</p>
+          </article>
+          <article class="feedback-summary__card">
+            <p class="feedback-summary__label" data-i18n="admin.feedbackSummary.recommend">Would recommend</p>
+            <strong id="feedback-summary-recommend" class="feedback-summary__value">0%</strong>
+            <p class="feedback-summary__meta" data-i18n="admin.feedbackSummary.recommendHint">Patients who answered yes</p>
+          </article>
+          <article class="feedback-summary__card">
+            <p class="feedback-summary__label" data-i18n="admin.feedbackSummary.waitingConcern">Waiting time concern</p>
+            <strong id="feedback-summary-waiting" class="feedback-summary__value">0%</strong>
+            <p class="feedback-summary__meta" data-i18n="admin.feedbackSummary.waitingHint">Responses rating waiting time low</p>
+          </article>
+          <article class="feedback-summary__card">
+            <p class="feedback-summary__label" data-i18n="admin.feedbackSummary.languageBarrier">Language or access barrier</p>
+            <strong id="feedback-summary-language" class="feedback-summary__value">0</strong>
+            <p class="feedback-summary__meta" data-i18n="admin.feedbackSummary.languageHint">Patients who reported support difficulty</p>
+          </article>
+        </div>
+
+        <form id="feedback-filters-form" class="feedback-filters" novalidate>
+          <div>
+            <label for="feedback-filter-service" data-i18n="admin.feedbackFilter.serviceArea">Service area</label>
+            <select id="feedback-filter-service" name="feedback-filter-service">
+              <option value="" data-i18n="admin.feedbackFilter.allServiceAreas">All service areas</option>
+            </select>
+          </div>
+          <div>
+            <label for="feedback-filter-status" data-i18n="admin.feedbackFilter.reviewStatus">Review status</label>
+            <select id="feedback-filter-status" name="feedback-filter-status">
+              <option value="" data-i18n="admin.feedbackFilter.allReviewStatuses">All review statuses</option>
+              <option value="new" data-i18n="admin.feedbackStatus.new">New</option>
+              <option value="reviewed" data-i18n="admin.feedbackStatus.reviewed">Reviewed</option>
+              <option value="follow-up-needed" data-i18n="admin.feedbackStatus.followUpNeeded">Follow-up Needed</option>
+              <option value="closed" data-i18n="admin.feedbackStatus.closed">Closed</option>
+            </select>
+          </div>
+        </form>
+
+        <div class="management-alert-history__layout feedback-layout">
+          <div class="table-responsive">
+            <table>
+              <caption class="sr-only" data-i18n="admin.feedbackCaption">Patient feedback responses list</caption>
+              <thead>
+                <tr>
+                  <th scope="col" data-i18n="admin.feedbackColumn.submittedAt">Submitted</th>
+                  <th scope="col" data-i18n="admin.feedbackColumn.serviceArea">Service area</th>
+                  <th scope="col" data-i18n="admin.feedbackColumn.visitType">Visit type</th>
+                  <th scope="col" data-i18n="admin.feedbackColumn.overallRating">Overall</th>
+                  <th scope="col" data-i18n="admin.feedbackColumn.recommend">Recommend</th>
+                  <th scope="col" data-i18n="admin.feedbackColumn.followUp">Follow-up</th>
+                  <th scope="col" data-i18n="admin.field.status">Status</th>
+                  <th scope="col" data-i18n="admin.field.actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="feedback-table-body"></tbody>
+            </table>
+          </div>
+
+          <aside id="feedback-detail" class="management-alert-detail feedback-detail" aria-labelledby="feedback-detail-title" hidden>
+            <div class="management-alert-detail__header">
+              <div>
+                <p class="management-alert-detail__eyebrow" data-i18n="admin.feedbackDetailEyebrow">Response details</p>
+                <h4 id="feedback-detail-title" data-i18n="admin.feedbackTitle">Patient Feedback</h4>
+              </div>
+              <p id="feedback-detail-time" class="management-alert-detail__time"></p>
+            </div>
+
+            <div class="feedback-detail__facts">
+              <p><strong data-i18n="admin.feedbackDetail.serviceArea">Service area:</strong> <span id="feedback-detail-service"></span></p>
+              <p><strong data-i18n="admin.feedbackDetail.visitType">Visit type:</strong> <span id="feedback-detail-visit-type"></span></p>
+              <p><strong data-i18n="admin.feedbackDetail.respondent">Respondent:</strong> <span id="feedback-detail-respondent"></span></p>
+              <p><strong data-i18n="admin.feedbackDetail.language">Preferred language:</strong> <span id="feedback-detail-language"></span></p>
+              <p><strong data-i18n="admin.feedbackDetail.recommend">Would recommend:</strong> <span id="feedback-detail-recommend"></span></p>
+              <p><strong data-i18n="admin.feedbackDetail.followUp">Follow-up:</strong> <span id="feedback-detail-follow-up"></span></p>
+              <p><strong data-i18n="admin.feedbackDetail.contact">Contact:</strong> <span id="feedback-detail-contact"></span></p>
+            </div>
+
+            <div class="feedback-detail__ratings">
+              <h5 data-i18n="admin.feedbackRatingsTitle">Ratings</h5>
+              <div id="feedback-detail-ratings-list" class="feedback-rating-list"></div>
+            </div>
+
+            <div class="feedback-detail__comments">
+              <h5 data-i18n="admin.feedbackCommentsTitle">Patient comments</h5>
+              <p><strong data-i18n="admin.feedbackDetail.whatWentWell">What went well:</strong> <span id="feedback-detail-positive"></span></p>
+              <p><strong data-i18n="admin.feedbackDetail.improvementPriority">What should improve first:</strong> <span id="feedback-detail-improve"></span></p>
+            </div>
+
+            <div class="management-alert-detail__controls">
+              <div>
+                <label for="feedback-status-select" data-i18n="admin.feedbackFilter.reviewStatus">Review status</label>
+                <select id="feedback-status-select" name="feedback-status">
+                  <option value="new" data-i18n="admin.feedbackStatus.new">New</option>
+                  <option value="reviewed" data-i18n="admin.feedbackStatus.reviewed">Reviewed</option>
+                  <option value="follow-up-needed" data-i18n="admin.feedbackStatus.followUpNeeded">Follow-up Needed</option>
+                  <option value="closed" data-i18n="admin.feedbackStatus.closed">Closed</option>
+                </select>
+              </div>
+              <button type="button" id="feedback-status-save" data-i18n="admin.saveFeedbackStatus">Save Status</button>
+            </div>
+          </aside>
+        </div>
+
+        <template id="feedback-row-template">
+          <tr>
+            <td data-field="submitted-at"></td>
+            <td data-field="service-area"></td>
+            <td data-field="visit-type"></td>
+            <td data-field="overall-rating"></td>
+            <td data-field="recommend"></td>
+            <td data-field="follow-up"></td>
+            <td><span data-field="status-badge" class="management-alert-status-badge"></span></td>
+            <td>
+              <button type="button" data-action="select-feedback" data-i18n="admin.openFeedback">Open</button>
+            </td>
+          </tr>
+        </template>
+      </section>
+
       <section id="management-alert-history" aria-labelledby="management-alert-history-title" hidden>
         <div class="management-alert-history__header">
           <div>

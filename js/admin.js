@@ -32,6 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
     { value: 'rejected', dbLabel: 'Rejected', labelKey: 'admin.complaintStatus.rejected' }
   ];
 
+  const FEEDBACK_STATUS_OPTIONS = [
+    { value: 'new', dbLabel: 'New', labelKey: 'admin.feedbackStatus.new' },
+    { value: 'reviewed', dbLabel: 'Reviewed', labelKey: 'admin.feedbackStatus.reviewed' },
+    { value: 'follow-up-needed', dbLabel: 'Follow-up Needed', labelKey: 'admin.feedbackStatus.followUpNeeded' },
+    { value: 'closed', dbLabel: 'Closed', labelKey: 'admin.feedbackStatus.closed' }
+  ];
+
   const MANAGEMENT_ALERT_STATUS_OPTIONS = [
     { value: 'new', dbLabel: 'New', labelKey: 'admin.managementAlertStatus.new' },
     { value: 'acknowledged', dbLabel: 'Acknowledged', labelKey: 'admin.managementAlertStatus.acknowledged' },
@@ -73,6 +80,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const complaintsSection = document.getElementById('complaints-section');
   const complaintsTableBody = document.getElementById('complaints-table-body');
   const complaintRowTemplate = document.getElementById('complaint-row-template');
+  const feedbackSection = document.getElementById('feedback-section');
+  const feedbackMessage = document.getElementById('feedback-message');
+  const feedbackSummaryTotal = document.getElementById('feedback-summary-total');
+  const feedbackSummaryOverall = document.getElementById('feedback-summary-overall');
+  const feedbackSummaryRecommend = document.getElementById('feedback-summary-recommend');
+  const feedbackSummaryWaiting = document.getElementById('feedback-summary-waiting');
+  const feedbackSummaryLanguage = document.getElementById('feedback-summary-language');
+  const feedbackFilterService = document.getElementById('feedback-filter-service');
+  const feedbackFilterStatus = document.getElementById('feedback-filter-status');
+  const feedbackTableBody = document.getElementById('feedback-table-body');
+  const feedbackRowTemplate = document.getElementById('feedback-row-template');
+  const feedbackDetail = document.getElementById('feedback-detail');
+  const feedbackDetailTitle = document.getElementById('feedback-detail-title');
+  const feedbackDetailTime = document.getElementById('feedback-detail-time');
+  const feedbackDetailService = document.getElementById('feedback-detail-service');
+  const feedbackDetailVisitType = document.getElementById('feedback-detail-visit-type');
+  const feedbackDetailRespondent = document.getElementById('feedback-detail-respondent');
+  const feedbackDetailLanguage = document.getElementById('feedback-detail-language');
+  const feedbackDetailRecommend = document.getElementById('feedback-detail-recommend');
+  const feedbackDetailFollowUp = document.getElementById('feedback-detail-follow-up');
+  const feedbackDetailContact = document.getElementById('feedback-detail-contact');
+  const feedbackDetailRatingsList = document.getElementById('feedback-detail-ratings-list');
+  const feedbackDetailPositive = document.getElementById('feedback-detail-positive');
+  const feedbackDetailImprove = document.getElementById('feedback-detail-improve');
+  const feedbackStatusSelect = document.getElementById('feedback-status-select');
+  const feedbackStatusSaveButton = document.getElementById('feedback-status-save');
   const managementAlertHistorySection = document.getElementById('management-alert-history');
   const managementAlertHistoryBody = document.getElementById('management-alert-history-body');
   const managementAlertRowTemplate = document.getElementById('management-alert-row-template');
@@ -119,6 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let managementAlertChannel = null;
   let managementAlerts = [];
   let selectedManagementAlertId = '';
+  let feedbackResponses = [];
+  let selectedFeedbackId = '';
   let pendingManagementAlerts = [];
   let activeManagementAlert = null;
 
@@ -160,10 +195,17 @@ document.addEventListener('DOMContentLoaded', () => {
       setManagementAlertHistoryMessage('', undefined);
     }
 
+    if (feedbackMessage && feedbackMessage.textContent) {
+      setFeedbackMessage('', undefined);
+    }
+
     if (managementAlertCommentMessage && managementAlertCommentMessage.textContent) {
       setManagementAlertCommentMessage('', undefined);
     }
 
+    renderFeedbackSummary(feedbackResponses);
+    renderFeedbackTable();
+    renderSelectedFeedback();
     renderActiveManagementAlert();
     renderManagementAlertHistory();
     renderSelectedManagementAlert();
@@ -174,6 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (isManagementRole()) {
       loadComplaints();
+      loadPatientFeedback();
       void refreshManagementAlerts();
       return;
     }
@@ -221,6 +264,24 @@ document.addEventListener('DOMContentLoaded', () => {
       complaintsTableBody.addEventListener('click', handleComplaintAction);
     }
 
+    if (feedbackTableBody) {
+      feedbackTableBody.addEventListener('click', handleFeedbackAction);
+    }
+
+    if (feedbackFilterService) {
+      feedbackFilterService.addEventListener('change', () => {
+        renderFeedbackTable();
+        renderSelectedFeedback();
+      });
+    }
+
+    if (feedbackFilterStatus) {
+      feedbackFilterStatus.addEventListener('change', () => {
+        renderFeedbackTable();
+        renderSelectedFeedback();
+      });
+    }
+
     if (managementAlertHistoryBody) {
       managementAlertHistoryBody.addEventListener('click', handleManagementAlertHistoryAction);
     }
@@ -235,6 +296,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (managementAlertCommentSaveButton) {
       managementAlertCommentSaveButton.addEventListener('click', handleManagementAlertCommentSave);
+    }
+
+    if (feedbackStatusSaveButton) {
+      feedbackStatusSaveButton.addEventListener('click', handleFeedbackStatusSave);
     }
 
     if (managementAlertModal) {
@@ -391,6 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dashboardInitialized) {
       if (isManagementRole()) {
         await loadComplaints();
+        await loadPatientFeedback();
         await refreshManagementAlerts();
         subscribeToManagementAlerts();
       } else {
@@ -402,6 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (isManagementRole()) {
       await loadComplaints();
+      await loadPatientFeedback();
       await refreshManagementAlerts();
       subscribeToManagementAlerts();
       dashboardInitialized = true;
@@ -885,6 +952,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderAppointments([]);
     renderComplaints([]);
+    renderPatientFeedback([]);
 
     if (loginForm) {
       loginForm.reset();
@@ -977,6 +1045,21 @@ document.addEventListener('DOMContentLoaded', () => {
     managementAlertHistoryMessage.style.color = type === 'success' ? '#1f7a1f' : '#b71f1f';
   }
 
+  function setFeedbackMessage(message, type) {
+    if (!feedbackMessage) {
+      return;
+    }
+
+    feedbackMessage.textContent = message;
+
+    if (!message) {
+      feedbackMessage.style.color = '';
+      return;
+    }
+
+    feedbackMessage.style.color = type === 'success' ? '#1f7a1f' : '#b71f1f';
+  }
+
   function setManagementAlertCommentMessage(message, type) {
     if (!managementAlertCommentMessage) {
       return;
@@ -1039,6 +1122,10 @@ document.addEventListener('DOMContentLoaded', () => {
       complaintsSection.hidden = !isManagement;
     }
 
+    if (feedbackSection) {
+      feedbackSection.hidden = !isManagement;
+    }
+
     if (managementAlertHistorySection) {
       managementAlertHistorySection.hidden = !isManagement;
     }
@@ -1046,6 +1133,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!isManagement) {
       if (managementAlertDetail) {
         managementAlertDetail.hidden = true;
+      }
+
+      if (feedbackDetail) {
+        feedbackDetail.hidden = true;
       }
 
       hideManagementAlertModal();
@@ -1166,6 +1257,17 @@ document.addEventListener('DOMContentLoaded', () => {
       .on(
         'postgres_changes',
         {
+          event: '*',
+          schema: 'public',
+          table: 'patient_feedback'
+        },
+        () => {
+          void loadPatientFeedback();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
           event: 'INSERT',
           schema: 'public',
           table: 'management_alerts'
@@ -1213,6 +1315,498 @@ document.addEventListener('DOMContentLoaded', () => {
     clearQueuedManagementAlerts();
     renderManagementAlertHistory();
     renderSelectedManagementAlert();
+  }
+
+  async function loadPatientFeedback() {
+    if (!isManagementRole()) {
+      renderPatientFeedback([]);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabaseClient
+        .from('patient_feedback')
+        .select('id, respondent_type, visit_timing, visit_type, service_area, preferred_language, doctor_care_rating, staff_helpfulness_rating, reception_rating, waiting_time_rating, cleanliness_rating, overall_confidence_rating, language_clarity_rating, wayfinding_rating, accessibility_support, would_recommend, what_went_well, improvement_priority, follow_up_requested, respondent_name, respondent_phone, review_status, created_at, updated_at')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      renderPatientFeedback(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error loading patient feedback:', error);
+      renderPatientFeedback([]);
+      setFeedbackMessage(translate('admin.feedbackLoadError', 'Unable to load patient feedback right now.'), 'error');
+    }
+  }
+
+  function renderPatientFeedback(entries) {
+    feedbackResponses = Array.isArray(entries) ? entries : [];
+
+    if (selectedFeedbackId && !feedbackResponses.some((entry) => String(entry.id) === selectedFeedbackId)) {
+      selectedFeedbackId = '';
+    }
+
+    populateFeedbackServiceFilter(feedbackResponses);
+    renderFeedbackSummary(feedbackResponses);
+    renderFeedbackTable();
+    renderSelectedFeedback();
+  }
+
+  function populateFeedbackServiceFilter(entries) {
+    if (!feedbackFilterService) {
+      return;
+    }
+
+    const selectedValue = feedbackFilterService.value || '';
+    const uniqueAreas = Array.from(new Set(entries.map((entry) => String(entry.service_area || '').trim()).filter(Boolean))).sort((leftValue, rightValue) => leftValue.localeCompare(rightValue));
+
+    feedbackFilterService.innerHTML = '';
+
+    const allOption = document.createElement('option');
+    allOption.value = '';
+    allOption.textContent = translate('admin.feedbackFilter.allServiceAreas', 'All service areas');
+    feedbackFilterService.appendChild(allOption);
+
+    uniqueAreas.forEach((area) => {
+      const option = document.createElement('option');
+      option.value = area;
+      option.textContent = area;
+      feedbackFilterService.appendChild(option);
+    });
+
+    feedbackFilterService.value = uniqueAreas.includes(selectedValue) ? selectedValue : '';
+
+    if (feedbackFilterStatus) {
+      localizeSelectOptions(feedbackFilterStatus, FEEDBACK_STATUS_OPTIONS, 'admin.feedbackStatusAria', 'Feedback review status');
+    }
+  }
+
+  function renderFeedbackSummary(entries) {
+    const totalResponses = entries.length;
+    const overallAverage = calculateAverage(entries, 'overall_confidence_rating');
+    const recommendYesCount = entries.filter((entry) => String(entry.would_recommend || '').trim().toLowerCase() === 'yes').length;
+    const waitingConcernCount = entries.filter((entry) => Number(entry.waiting_time_rating || 0) <= 2).length;
+    const languageBarrierCount = entries.filter((entry) => {
+      const languageRating = Number(entry.language_clarity_rating || 0);
+      const accessibilityValue = String(entry.accessibility_support || '').trim().toLowerCase();
+      return languageRating <= 2 || (accessibilityValue && accessibilityValue !== 'no');
+    }).length;
+
+    if (feedbackSummaryTotal) {
+      feedbackSummaryTotal.textContent = String(totalResponses);
+    }
+
+    if (feedbackSummaryOverall) {
+      feedbackSummaryOverall.textContent = totalResponses ? `${overallAverage.toFixed(1)}/5` : '0.0/5';
+    }
+
+    if (feedbackSummaryRecommend) {
+      feedbackSummaryRecommend.textContent = `${calculatePercentage(recommendYesCount, totalResponses)}%`;
+    }
+
+    if (feedbackSummaryWaiting) {
+      feedbackSummaryWaiting.textContent = `${calculatePercentage(waitingConcernCount, totalResponses)}%`;
+    }
+
+    if (feedbackSummaryLanguage) {
+      feedbackSummaryLanguage.textContent = String(languageBarrierCount);
+    }
+  }
+
+  function renderFeedbackTable() {
+    if (!feedbackTableBody) {
+      return;
+    }
+
+    const filteredResponses = getFilteredFeedbackResponses();
+    feedbackTableBody.innerHTML = '';
+
+    if (filteredResponses.length === 0) {
+      const emptyRow = document.createElement('tr');
+      const emptyCell = document.createElement('td');
+      emptyCell.colSpan = 8;
+      emptyCell.textContent = translate('admin.feedbackEmpty', 'No patient feedback matches the current filters.');
+      emptyRow.appendChild(emptyCell);
+      feedbackTableBody.appendChild(emptyRow);
+      return;
+    }
+
+    filteredResponses.forEach((entry) => {
+      const row = buildFeedbackRow(entry);
+      feedbackTableBody.appendChild(row);
+    });
+  }
+
+  function buildFeedbackRow(entry) {
+    let row;
+
+    if (feedbackRowTemplate && 'content' in feedbackRowTemplate) {
+      const fragment = feedbackRowTemplate.content.cloneNode(true);
+      row = fragment.querySelector('tr');
+    }
+
+    if (!row) {
+      row = document.createElement('tr');
+    }
+
+    row.dataset.feedbackId = String(entry.id || '');
+    row.classList.toggle('feedback-row--selected', String(entry.id || '') === selectedFeedbackId);
+
+    const submittedAtCell = row.querySelector('[data-field="submitted-at"]');
+    const serviceAreaCell = row.querySelector('[data-field="service-area"]');
+    const visitTypeCell = row.querySelector('[data-field="visit-type"]');
+    const overallRatingCell = row.querySelector('[data-field="overall-rating"]');
+    const recommendCell = row.querySelector('[data-field="recommend"]');
+    const followUpCell = row.querySelector('[data-field="follow-up"]');
+    const statusBadge = row.querySelector('[data-field="status-badge"]');
+    const openButton = row.querySelector('button[data-action="select-feedback"]');
+
+    if (submittedAtCell) {
+      submittedAtCell.textContent = formatReportedAt(entry.created_at);
+    }
+
+    if (serviceAreaCell) {
+      serviceAreaCell.textContent = entry.service_area || '';
+    }
+
+    if (visitTypeCell) {
+      visitTypeCell.textContent = resolveFeedbackVisitTypeLabel(entry.visit_type);
+    }
+
+    if (overallRatingCell) {
+      overallRatingCell.textContent = formatRatingValue(entry.overall_confidence_rating);
+    }
+
+    if (recommendCell) {
+      recommendCell.textContent = resolveFeedbackRecommendationLabel(entry.would_recommend);
+    }
+
+    if (followUpCell) {
+      followUpCell.textContent = entry.follow_up_requested ? translate('admin.feedbackFollowUpRequested', 'Requested') : translate('admin.feedbackFollowUpNotRequested', 'Not requested');
+    }
+
+    if (statusBadge) {
+      const statusValue = mapFeedbackStatusToValue(entry.review_status || 'New');
+      statusBadge.dataset.status = statusValue;
+      statusBadge.textContent = translate(resolveFeedbackStatusLabelKey(statusValue), mapFeedbackStatusToDb(statusValue));
+    }
+
+    if (openButton) {
+      openButton.textContent = translate('admin.openFeedback', 'Open');
+    }
+
+    return row;
+  }
+
+  function renderSelectedFeedback() {
+    if (!feedbackDetail || !feedbackDetailTitle || !feedbackStatusSelect) {
+      return;
+    }
+
+    const selectedEntry = getSelectedFeedback();
+    if (!selectedEntry) {
+      feedbackDetail.hidden = true;
+      return;
+    }
+
+    feedbackDetail.hidden = false;
+    feedbackDetailTitle.textContent = `${selectedEntry.service_area || translate('admin.feedbackTitle', 'Patient Feedback')} - ${resolveFeedbackVisitTypeLabel(selectedEntry.visit_type)}`;
+
+    if (feedbackDetailTime) {
+      feedbackDetailTime.textContent = `${translate('admin.feedbackSubmittedAt', 'Submitted at')} ${formatReportedAt(selectedEntry.created_at)}`.trim();
+    }
+
+    if (feedbackDetailService) {
+      feedbackDetailService.textContent = selectedEntry.service_area || '';
+    }
+
+    if (feedbackDetailVisitType) {
+      feedbackDetailVisitType.textContent = resolveFeedbackVisitTypeLabel(selectedEntry.visit_type);
+    }
+
+    if (feedbackDetailRespondent) {
+      feedbackDetailRespondent.textContent = resolveFeedbackRespondentLabel(selectedEntry.respondent_type);
+    }
+
+    if (feedbackDetailLanguage) {
+      feedbackDetailLanguage.textContent = resolveFeedbackLanguageLabel(selectedEntry.preferred_language);
+    }
+
+    if (feedbackDetailRecommend) {
+      feedbackDetailRecommend.textContent = resolveFeedbackRecommendationLabel(selectedEntry.would_recommend);
+    }
+
+    if (feedbackDetailFollowUp) {
+      feedbackDetailFollowUp.textContent = selectedEntry.follow_up_requested ? translate('admin.feedbackFollowUpRequested', 'Requested') : translate('admin.feedbackFollowUpNotRequested', 'Not requested');
+    }
+
+    if (feedbackDetailContact) {
+      feedbackDetailContact.textContent = buildFeedbackContactText(selectedEntry);
+    }
+
+    if (feedbackDetailPositive) {
+      feedbackDetailPositive.textContent = String(selectedEntry.what_went_well || '').trim() || translate('admin.feedbackNoComment', 'No comment provided.');
+    }
+
+    if (feedbackDetailImprove) {
+      feedbackDetailImprove.textContent = String(selectedEntry.improvement_priority || '').trim() || translate('admin.feedbackNoComment', 'No comment provided.');
+    }
+
+    if (feedbackDetailRatingsList) {
+      feedbackDetailRatingsList.innerHTML = '';
+      buildFeedbackRatingRows(selectedEntry).forEach((ratingItem) => {
+        feedbackDetailRatingsList.appendChild(ratingItem);
+      });
+    }
+
+    localizeSelectOptions(feedbackStatusSelect, FEEDBACK_STATUS_OPTIONS, 'admin.feedbackStatusAria', 'Feedback review status');
+    feedbackStatusSelect.value = mapFeedbackStatusToValue(selectedEntry.review_status || 'New');
+  }
+
+  function buildFeedbackRatingRows(entry) {
+    const definitions = [
+      { key: 'doctor_care_rating', label: translate('feedback.question.doctorCare', 'Doctor explanation and care') },
+      { key: 'staff_helpfulness_rating', label: translate('feedback.question.staffHelpfulness', 'Nursing and support staff helpfulness') },
+      { key: 'reception_rating', label: translate('feedback.question.reception', 'Reception and registration experience') },
+      { key: 'waiting_time_rating', label: translate('feedback.question.waitingTime', 'Waiting time') },
+      { key: 'cleanliness_rating', label: translate('feedback.question.cleanliness', 'Cleanliness and comfort') },
+      { key: 'overall_confidence_rating', label: translate('feedback.question.overallConfidence', 'Overall confidence in the hospital') },
+      { key: 'language_clarity_rating', label: translate('feedback.question.languageClarity', 'Could you understand staff in your preferred language?') },
+      { key: 'wayfinding_rating', label: translate('feedback.question.wayfinding', 'Signs and directions were easy to follow') }
+    ];
+
+    return definitions.map((definition) => {
+      const item = document.createElement('div');
+      const label = document.createElement('span');
+      const value = document.createElement('strong');
+
+      item.className = 'feedback-rating-list__item';
+      label.textContent = definition.label;
+      value.textContent = formatRatingValue(entry[definition.key]);
+
+      item.appendChild(label);
+      item.appendChild(value);
+      return item;
+    });
+  }
+
+  async function handleFeedbackAction(event) {
+    const target = event.target;
+
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    if (target.dataset.action !== 'select-feedback') {
+      return;
+    }
+
+    const row = target.closest('tr');
+    if (!row) {
+      return;
+    }
+
+    selectedFeedbackId = String(row.dataset.feedbackId || '');
+    renderFeedbackTable();
+    renderSelectedFeedback();
+  }
+
+  async function handleFeedbackStatusSave() {
+    if (!isManagementRole()) {
+      return;
+    }
+
+    const selectedEntry = getSelectedFeedback();
+    const nextStatus = feedbackStatusSelect?.value || '';
+    if (!selectedEntry || !nextStatus) {
+      return;
+    }
+
+    if (feedbackStatusSaveButton) {
+      feedbackStatusSaveButton.disabled = true;
+      feedbackStatusSaveButton.textContent = translate('admin.savingFeedbackStatus', 'Saving...');
+    }
+
+    try {
+      const { error } = await supabaseClient
+        .from('patient_feedback')
+        .update({
+          review_status: mapFeedbackStatusToDb(nextStatus),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedEntry.id);
+
+      if (error) {
+        throw error;
+      }
+
+      setFeedbackMessage(translate('admin.feedbackStatusSaved', 'Feedback review status updated.'), 'success');
+      await loadPatientFeedback();
+    } catch (error) {
+      console.error('Error updating feedback status:', error);
+      setFeedbackMessage(translate('admin.feedbackStatusError', 'Unable to update feedback review status right now.'), 'error');
+    } finally {
+      if (feedbackStatusSaveButton) {
+        feedbackStatusSaveButton.disabled = false;
+        feedbackStatusSaveButton.textContent = translate('admin.saveFeedbackStatus', 'Save Status');
+      }
+    }
+  }
+
+  function getFilteredFeedbackResponses() {
+    const selectedServiceArea = String(feedbackFilterService?.value || '').trim();
+    const selectedStatus = String(feedbackFilterStatus?.value || '').trim();
+
+    return feedbackResponses.filter((entry) => {
+      const matchesArea = !selectedServiceArea || String(entry.service_area || '').trim() === selectedServiceArea;
+      const matchesStatus = !selectedStatus || mapFeedbackStatusToValue(entry.review_status || 'New') === selectedStatus;
+      return matchesArea && matchesStatus;
+    });
+  }
+
+  function getSelectedFeedback() {
+    const filteredResponses = getFilteredFeedbackResponses();
+    if (!selectedFeedbackId && filteredResponses.length > 0) {
+      selectedFeedbackId = String(filteredResponses[0].id || '');
+    }
+
+    return filteredResponses.find((entry) => String(entry.id || '') === selectedFeedbackId) || null;
+  }
+
+  function calculateAverage(entries, key) {
+    if (!entries.length) {
+      return 0;
+    }
+
+    const total = entries.reduce((sum, entry) => sum + Number(entry[key] || 0), 0);
+    return total / entries.length;
+  }
+
+  function calculatePercentage(value, total) {
+    if (!total) {
+      return 0;
+    }
+
+    return Math.round((value / total) * 100);
+  }
+
+  function formatRatingValue(value) {
+    const numericValue = Number(value || 0);
+    if (!numericValue) {
+      return '0/5';
+    }
+
+    return `${translate(`feedback.scale.${numericValue}`, `${numericValue}/5`)} (${numericValue}/5)`;
+  }
+
+  function resolveFeedbackVisitTypeLabel(value) {
+    const normalizedValue = String(value || '').trim().toLowerCase();
+
+    if (normalizedValue === 'outpatient') {
+      return translate('feedback.visitType.outpatient', 'Outpatient consultation');
+    }
+
+    if (normalizedValue === 'inpatient') {
+      return translate('feedback.visitType.inpatient', 'Inpatient stay');
+    }
+
+    if (normalizedValue === 'lab') {
+      return translate('feedback.visitType.lab', 'Lab or scan');
+    }
+
+    if (normalizedValue === 'pharmacy') {
+      return translate('feedback.visitType.pharmacy', 'Pharmacy');
+    }
+
+    if (normalizedValue === 'emergency') {
+      return translate('feedback.visitType.emergency', 'Emergency care');
+    }
+
+    if (normalizedValue === 'caregiver_support') {
+      return translate('feedback.visitType.caregiverSupport', 'Attender or caregiver support');
+    }
+
+    return String(value || '');
+  }
+
+  function resolveFeedbackRespondentLabel(value) {
+    const normalizedValue = String(value || '').trim().toLowerCase();
+    if (normalizedValue === 'caregiver') {
+      return translate('feedback.respondent.caregiver', 'Family member or caregiver');
+    }
+
+    return translate('feedback.respondent.patient', 'Patient');
+  }
+
+  function resolveFeedbackLanguageLabel(value) {
+    const normalizedValue = String(value || '').trim().toLowerCase();
+
+    if (normalizedValue === 'kn') {
+      return translate('language.name.kn', 'Kannada');
+    }
+
+    if (normalizedValue === 'hi') {
+      return translate('language.name.hi', 'Hindi');
+    }
+
+    if (normalizedValue === 'en') {
+      return translate('language.name.en', 'English');
+    }
+
+    return translate('feedback.language.other', 'Other');
+  }
+
+  function resolveFeedbackRecommendationLabel(value) {
+    const normalizedValue = String(value || '').trim().toLowerCase();
+
+    if (normalizedValue === 'yes') {
+      return translate('feedback.recommend.yes', 'Yes');
+    }
+
+    if (normalizedValue === 'maybe') {
+      return translate('feedback.recommend.maybe', 'Maybe');
+    }
+
+    return translate('feedback.recommend.no', 'No');
+  }
+
+  function buildFeedbackContactText(entry) {
+    const parts = [];
+    const name = String(entry?.respondent_name || '').trim();
+    const phone = String(entry?.respondent_phone || '').trim();
+
+    if (name) {
+      parts.push(name);
+    }
+
+    if (phone) {
+      parts.push(phone);
+    }
+
+    return parts.length ? parts.join(' | ') : translate('admin.anonymous', 'Anonymous');
+  }
+
+  function mapFeedbackStatusToDb(value) {
+    const normalizedValue = String(value || '').trim().toLowerCase();
+    const matchedStatus = FEEDBACK_STATUS_OPTIONS.find((statusOption) => statusOption.value === normalizedValue || statusOption.dbLabel.toLowerCase() === normalizedValue);
+    return matchedStatus ? matchedStatus.dbLabel : 'New';
+  }
+
+  function mapFeedbackStatusToValue(value) {
+    const normalizedValue = String(value || '').trim().toLowerCase();
+    if (!normalizedValue) {
+      return 'new';
+    }
+
+    const matchedStatus = FEEDBACK_STATUS_OPTIONS.find((statusOption) => statusOption.value === normalizedValue || statusOption.dbLabel.toLowerCase() === normalizedValue);
+    return matchedStatus ? matchedStatus.value : 'new';
+  }
+
+  function resolveFeedbackStatusLabelKey(value) {
+    const matchedStatus = FEEDBACK_STATUS_OPTIONS.find((statusOption) => statusOption.value === value);
+    return matchedStatus ? matchedStatus.labelKey : 'admin.feedbackStatus.new';
   }
 
   function clearQueuedManagementAlerts() {

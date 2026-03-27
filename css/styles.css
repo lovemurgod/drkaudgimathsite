@@ -136,6 +136,39 @@ h2::after {
   border-radius: 999px;
 }
 
+.admin-page .feedback-detail__facts p,
+.admin-page .feedback-detail__comments p {
+  margin: 0;
+}
+
+.admin-page .feedback-detail__ratings h5,
+.admin-page .feedback-detail__comments h5 {
+  margin-bottom: 0.75rem;
+}
+
+.admin-page .feedback-rating-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-page .feedback-rating-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #dbe9f2;
+  border-radius: 10px;
+  background: #f9fcfe;
+}
+
+.admin-page .feedback-rating-list__item strong {
+  color: #143447;
+}
+
+.admin-page .feedback-row--selected {
+  background: #eef8fe;
+}
 h3 {
   font-size: clamp(1.06rem, 2.2vw, 1.25rem);
   font-weight: 700;
@@ -777,12 +810,14 @@ p {
 }
 
 .appointment-page .appointment-section,
-.complaint-page .appointment-section {
+.complaint-page .appointment-section,
+.feedback-page .appointment-section {
   background: linear-gradient(180deg, #edf6fa 0%, #f8fcff 100%);
 }
 
 .appointment-page .appointment-card,
-.complaint-page .appointment-card {
+.complaint-page .appointment-card,
+.feedback-page .appointment-card {
   width: min(100%, 760px);
   margin-inline: auto;
   background: var(--color-surface);
@@ -793,7 +828,8 @@ p {
 }
 
 .appointment-page #appointment-title,
-.complaint-page #complaint-title {
+.complaint-page #complaint-title,
+.feedback-page #feedback-title {
   margin-bottom: 0.55rem;
 }
 
@@ -802,7 +838,8 @@ p {
 }
 
 .appointment-page #appointment-form,
-.complaint-page #complaint-form {
+.complaint-page #complaint-form,
+.feedback-page #feedback-form {
   display: grid;
   gap: 0.95rem;
 }
@@ -822,7 +859,10 @@ p {
 .appointment-page #appointment-form textarea,
 .complaint-page #complaint-form input,
 .complaint-page #complaint-form select,
-.complaint-page #complaint-form textarea {
+.complaint-page #complaint-form textarea,
+.feedback-page #feedback-form input,
+.feedback-page #feedback-form select,
+.feedback-page #feedback-form textarea {
   width: 100%;
   border: 1px solid var(--color-border);
   border-radius: 8px;
@@ -833,7 +873,8 @@ p {
 }
 
 .appointment-page #appointment-form textarea,
-.complaint-page #complaint-form textarea {
+.complaint-page #complaint-form textarea,
+.feedback-page #feedback-form textarea {
   resize: vertical;
   min-height: 112px;
 }
@@ -843,7 +884,10 @@ p {
 .appointment-page #appointment-form textarea:focus,
 .complaint-page #complaint-form input:focus,
 .complaint-page #complaint-form select:focus,
-.complaint-page #complaint-form textarea:focus {
+.complaint-page #complaint-form textarea:focus,
+.feedback-page #feedback-form input:focus,
+.feedback-page #feedback-form select:focus,
+.feedback-page #feedback-form textarea:focus {
   outline: 3px solid rgba(0, 151, 178, 0.2);
   outline-offset: 1px;
   border-color: var(--color-primary);
@@ -867,6 +911,93 @@ p {
   color: #253d52;
   font-size: 2em;
   text-align: center;
+}
+
+.feedback-card {
+  width: min(100%, 880px);
+}
+
+.feedback-privacy-note {
+  margin-bottom: 1rem;
+  color: #0d566d;
+  font-weight: 600;
+}
+
+.feedback-form__section {
+  display: grid;
+  gap: 0.95rem;
+  padding: 1rem;
+  border: 1px solid #dbe9f2;
+  border-radius: 12px;
+  background: #f9fcfe;
+}
+
+.feedback-form__section-title {
+  margin: 0;
+  font-size: 1.08rem;
+}
+
+.feedback-form__section-title::after {
+  display: none;
+}
+
+.feedback-form__section-intro {
+  margin-top: -0.25rem;
+  color: #51697b;
+}
+
+.feedback-question {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.feedback-question legend {
+  font-weight: 700;
+  color: #243a4d;
+}
+
+.feedback-scale {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+}
+
+.feedback-scale label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 52px;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: #ffffff;
+  cursor: pointer;
+  font-weight: 600;
+  color: #2d4659;
+}
+
+.feedback-scale input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+}
+
+.feedback-checkbox label {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  font-weight: 600;
+  color: #243a4d;
+}
+
+.feedback-checkbox input {
+  width: 18px;
+  height: 18px;
+  margin-top: 0.15rem;
+  accent-color: var(--color-primary);
 }
 
 .sr-only {
@@ -1090,6 +1221,7 @@ p {
 .admin-page #filters-title,
 .admin-page #appointments-title,
 .admin-page #complaints-title,
+.admin-page #feedback-section-title,
 .admin-page #management-alert-history-title,
 .admin-page #manual-entry-title {
   margin-bottom: 0.95rem;
@@ -1097,7 +1229,8 @@ p {
 }
 
 .admin-page #filters-form,
-.admin-page #manual-appointment-form {
+.admin-page #manual-appointment-form,
+.admin-page .feedback-filters {
   display: grid;
   gap: 0.9rem;
 }
@@ -1149,6 +1282,10 @@ p {
 
 .admin-page td select[name='complaint-status'] {
   min-width: 148px;
+}
+
+.admin-page td select[name='feedback-status'] {
+  min-width: 166px;
 }
 
 .admin-page [data-action='update-status'] {
@@ -1254,6 +1391,21 @@ p {
   color: #b71f1f;
 }
 
+.admin-page .management-alert-status-badge[data-status='reviewed'] {
+  background: #e8f5f9;
+  color: #0d566d;
+}
+
+.admin-page .management-alert-status-badge[data-status='follow-up-needed'] {
+  background: #fff1da;
+  color: #9b5d00;
+}
+
+.admin-page .management-alert-status-badge[data-status='closed'] {
+  background: #e7f8ee;
+  color: #1f7a1f;
+}
+
 .admin-page [data-action='select-management-alert'] {
   min-height: 36px;
   padding: 0.42rem 0.72rem;
@@ -1263,6 +1415,19 @@ p {
 }
 
 .admin-page [data-action='select-management-alert']:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.admin-page [data-action='select-feedback'] {
+  min-height: 36px;
+  padding: 0.42rem 0.72rem;
+  background: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.admin-page [data-action='select-feedback']:hover {
   background: var(--color-primary);
   color: #fff;
 }
@@ -1451,6 +1616,90 @@ p {
   white-space: pre-wrap;
 }
 
+.admin-page .feedback-summary {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin-bottom: 1rem;
+}
+
+.admin-page .feedback-summary__card {
+  border: 1px solid #dbe9f2;
+  border-radius: 12px;
+  background: #f9fcfe;
+  padding: 0.9rem 1rem;
+}
+
+.admin-page .feedback-summary__label {
+  margin: 0;
+  color: #51697b;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.admin-page .feedback-summary__value {
+  display: block;
+  margin-top: 0.3rem;
+  color: #143447;
+  font-size: 1.45rem;
+  line-height: 1.2;
+}
+
+.admin-page .feedback-summary__meta {
+  margin-top: 0.35rem;
+  color: #51697b;
+  font-size: 0.84rem;
+}
+
+.admin-page .feedback-filters {
+  margin-bottom: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.admin-page .feedback-layout {
+  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr);
+}
+
+.admin-page .feedback-detail__facts {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.admin-page .feedback-detail__facts p,
+.admin-page .feedback-detail__comments p {
+  margin: 0;
+}
+
+.admin-page .feedback-detail__ratings h5,
+.admin-page .feedback-detail__comments h5 {
+  margin-bottom: 0.75rem;
+}
+
+.admin-page .feedback-rating-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-page .feedback-rating-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #dbe9f2;
+  border-radius: 10px;
+  background: #f9fcfe;
+}
+
+.admin-page .feedback-rating-list__item strong {
+  color: #143447;
+}
+
+.admin-page .feedback-row--selected {
+  background: #eef8fe;
+}
+
 .admin-page #dismiss-management-alert {
   min-width: 128px;
   background: var(--color-primary);
@@ -1632,12 +1881,14 @@ p {
   }
 
   .appointment-page .appointment-card,
-  .complaint-page .appointment-card {
+  .complaint-page .appointment-card,
+  .feedback-page .appointment-card {
     padding: 1.7rem;
   }
 
   .appointment-page #appointment-form,
-  .complaint-page #complaint-form {
+  .complaint-page #complaint-form,
+  .feedback-page #feedback-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 1rem;
     row-gap: 1rem;
@@ -1645,20 +1896,28 @@ p {
 
   .appointment-page .appointment-form__field,
   .complaint-page .appointment-form__field,
+  .feedback-page .appointment-form__field,
   .appointment-page .appointment-form__actions,
   .complaint-page .appointment-form__actions,
+  .feedback-page .appointment-form__actions,
   .appointment-page .appointment-form__message,
-  .complaint-page .appointment-form__message {
+  .complaint-page .appointment-form__message,
+  .feedback-page .appointment-form__message {
     grid-column: 1 / -1;
   }
 
-  .appointment-page .appointment-form__field--half {
+  .appointment-page .appointment-form__field--half,
+  .feedback-page .appointment-form__field--half {
     grid-column: span 1;
   }
 
   .appointment-page .appointment-form__actions .button {
     width: auto;
     min-width: 260px;
+  }
+
+  .feedback-page .feedback-scale {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .admin-page #login-view:not([hidden]) {
@@ -1677,6 +1936,10 @@ p {
     gap: 1rem;
   }
 
+  .admin-page .feedback-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .admin-page #manual-appointment-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 1rem;
@@ -1691,6 +1954,23 @@ p {
   .admin-page #manual-submit {
     width: fit-content;
     min-width: 180px;
+  }
+}
+
+@media (max-width: 767px) {
+  .admin-page .feedback-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .feedback-page .feedback-scale {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-page .feedback-rating-list__item {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Share your hospital experience to help us improve patient care." />
+  <title>Share Feedback | Dr. R. G. Karudagimath Memorial Nursing Home</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="feedback-page">
+  <a class="skip-link" href="#main-content" data-i18n="common.skipToMain">Skip to main content</a>
+
+  <header class="site-header" aria-label="Main header" data-i18n-attr="aria-label:common.mainHeaderAria">
+    <div class="container site-header__inner">
+      <a class="brand" href="index.html" aria-label="Dr. R. G. Karudagimath Memorial Nursing Home home" data-i18n-attr="aria-label:common.brandHomeAria">
+        <img src="Assets/images/Logo.png" alt="Dr. R. G. Karudagimath Memorial Nursing Home logo" class="brand__logo" data-i18n-attr="alt:common.logoAlt" />
+        <span class="brand__name" data-i18n="common.brandName">Dr. R. G. Karudagimath Memorial Nursing Home</span>
+      </a>
+
+      <nav class="primary-nav" aria-label="Primary navigation" data-i18n-attr="aria-label:common.primaryNavigationAria">
+        <ul class="primary-nav__list">
+          <li><a href="index.html" data-i18n="common.home">Home</a></li>
+          <li><a href="complaint.html" data-i18n="common.fileComplaint">File Complaint</a></li>
+          <li class="language-control">
+            <label class="language-control__label" data-language-label for="language-selector-feedback">Language:</label>
+            <select id="language-selector-feedback" class="language-control__select" data-language-selector aria-label="Language selector" data-i18n-attr="aria-label:common.languageSelectorAria">
+              <option value="en">English</option>
+              <option value="hi">Hindi</option>
+              <option value="kn">Kannada</option>
+            </select>
+          </li>
+          <li><a href="tel:+919740978768" class="button button--small button--emergency" aria-label="Call ambulance now" data-i18n="nav.callAmbulanceNow" data-i18n-attr="aria-label:common.callAmbulanceAria">Call Ambulance Now</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="appointment-section" aria-labelledby="feedback-title">
+      <div class="container">
+        <div class="appointment-card feedback-card">
+          <h1 id="feedback-title" data-i18n="feedback.pageTitle">Patient Care Feedback</h1>
+          <p class="appointment-intro" data-i18n="feedback.pageIntro">This short questionnaire helps hospital management understand your visit. You may submit it anonymously.</p>
+          <p class="feedback-privacy-note" data-i18n="feedback.privacyNote">Name and phone are optional unless you want a follow-up call.</p>
+
+          <form id="feedback-form" novalidate>
+            <div class="feedback-form__section">
+              <h2 class="feedback-form__section-title" data-i18n="feedback.section.visitDetails">Visit details</h2>
+
+              <div class="appointment-form__field appointment-form__field--half">
+                <label for="respondent_type" data-i18n="feedback.field.respondentType">Who is filling this form? *</label>
+                <select id="respondent_type" name="respondent_type" required>
+                  <option value="" data-i18n="feedback.selectPrompt">Select an option</option>
+                  <option value="patient" data-i18n="feedback.respondent.patient">Patient</option>
+                  <option value="caregiver" data-i18n="feedback.respondent.caregiver">Family member or caregiver</option>
+                </select>
+              </div>
+
+              <div class="appointment-form__field appointment-form__field--half">
+                <label for="visit_timing" data-i18n="feedback.field.visitTiming">When was the visit? *</label>
+                <select id="visit_timing" name="visit_timing" required>
+                  <option value="" data-i18n="feedback.selectPrompt">Select an option</option>
+                  <option value="today" data-i18n="feedback.visitTiming.today">Today</option>
+                  <option value="this_week" data-i18n="feedback.visitTiming.thisWeek">This week</option>
+                  <option value="this_month" data-i18n="feedback.visitTiming.thisMonth">This month</option>
+                  <option value="earlier" data-i18n="feedback.visitTiming.earlier">Earlier</option>
+                </select>
+              </div>
+
+              <div class="appointment-form__field appointment-form__field--half">
+                <label for="visit_type" data-i18n="feedback.field.visitType">What kind of visit was it? *</label>
+                <select id="visit_type" name="visit_type" required>
+                  <option value="" data-i18n="feedback.selectPrompt">Select an option</option>
+                  <option value="outpatient" data-i18n="feedback.visitType.outpatient">Outpatient consultation</option>
+                  <option value="inpatient" data-i18n="feedback.visitType.inpatient">Inpatient stay</option>
+                  <option value="lab" data-i18n="feedback.visitType.lab">Lab or scan</option>
+                  <option value="pharmacy" data-i18n="feedback.visitType.pharmacy">Pharmacy</option>
+                  <option value="emergency" data-i18n="feedback.visitType.emergency">Emergency care</option>
+                  <option value="caregiver_support" data-i18n="feedback.visitType.caregiverSupport">Attender or caregiver support</option>
+                </select>
+              </div>
+
+              <div class="appointment-form__field appointment-form__field--half">
+                <label for="service_area" data-i18n="feedback.field.serviceArea">Which service area did you use most? *</label>
+                <select id="service_area" name="service_area" required>
+                  <option value="" data-i18n="feedback.selectPrompt">Select an option</option>
+                  <option value="General Medicine" data-i18n="feedback.serviceArea.generalMedicine">General Medicine</option>
+                  <option value="Women and Maternity Care" data-i18n="feedback.serviceArea.obg">Women and maternity care</option>
+                  <option value="Orthopaedics" data-i18n="feedback.serviceArea.orthopaedics">Orthopaedics</option>
+                  <option value="Child Care" data-i18n="feedback.serviceArea.paediatrics">Child care</option>
+                  <option value="Surgery" data-i18n="feedback.serviceArea.surgery">Surgery</option>
+                  <option value="Emergency" data-i18n="feedback.serviceArea.emergency">Emergency</option>
+                  <option value="Lab or Diagnostics" data-i18n="feedback.serviceArea.lab">Lab or diagnostics</option>
+                  <option value="Pharmacy" data-i18n="feedback.serviceArea.pharmacy">Pharmacy</option>
+                  <option value="Reception or Registration" data-i18n="feedback.serviceArea.reception">Reception or registration</option>
+                  <option value="Other" data-i18n="feedback.serviceArea.other">Other</option>
+                </select>
+              </div>
+
+              <div class="appointment-form__field">
+                <label for="preferred_language" data-i18n="feedback.field.preferredLanguage">Which language do you prefer for hospital communication? *</label>
+                <select id="preferred_language" name="preferred_language" required>
+                  <option value="" data-i18n="feedback.selectPrompt">Select an option</option>
+                  <option value="kn" data-i18n="language.name.kn">Kannada</option>
+                  <option value="hi" data-i18n="language.name.hi">Hindi</option>
+                  <option value="en" data-i18n="language.name.en">English</option>
+                  <option value="other" data-i18n="feedback.language.other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="feedback-form__section">
+              <h2 class="feedback-form__section-title" data-i18n="feedback.section.ratings">Rate your experience</h2>
+              <p class="feedback-form__section-intro" data-i18n="feedback.ratingsIntro">Choose one answer for each question.</p>
+
+              <fieldset class="feedback-question">
+                <legend data-i18n="feedback.question.doctorCare">Doctor explanation and care *</legend>
+                <div class="feedback-scale" data-rating-group>
+                  <label><input type="radio" name="doctor_care_rating" value="5" required /><span data-i18n="feedback.scale.5">Very satisfied</span></label>
+                  <label><input type="radio" name="doctor_care_rating" value="4" /><span data-i18n="feedback.scale.4">Satisfied</span></label>
+                  <label><input type="radio" name="doctor_care_rating" value="3" /><span data-i18n="feedback.scale.3">Neutral</span></label>
+                  <label><input type="radio" name="doctor_care_rating" value="2" /><span data-i18n="feedback.scale.2">Dissatisfied</span></label>
+                  <label><input type="radio" name="doctor_care_rating" value="1" /><span data-i18n="feedback.scale.1">Very dissatisfied</span></label>
+                </div>
+              </fieldset>
+
+              <fieldset class="feedback-question">
+                <legend data-i18n="feedback.question.staffHelpfulness">Nursing and support staff helpfulness *</legend>
+                <div class="feedback-scale" data-rating-group>
+                  <label><input type="radio" name="staff_helpfulness_rating" value="5" required /><span data-i18n="feedback.scale.5">Very satisfied</span></label>
+                  <label><input type="radio" name="staff_helpfulness_rating" value="4" /><span data-i18n="feedback.scale.4">Satisfied</span></label>
+                  <label><input type="radio" name="staff_helpfulness_rating" value="3" /><span data-i18n="feedback.scale.3">Neutral</span></label>
+                  <label><input type="radio" name="staff_helpfulness_rating" value="2" /><span data-i18n="feedback.scale.2">Dissatisfied</span></label>
+                  <label><input type="radio" name="staff_helpfulness_rating" value="1" /><span data-i18n="feedback.scale.1">Very dissatisfied</span></label>
+                </div>
+              </fieldset>
+
+              <fieldset class="feedback-question">
+                <legend data-i18n="feedback.question.reception">Reception and registration experience *</legend>
+                <div class="feedback-scale" data-rating-group>
+                  <label><input type="radio" name="reception_rating" value="5" required /><span data-i18n="feedback.scale.5">Very satisfied</span></label>
+                  <label><input type="radio" name="reception_rating" value="4" /><span data-i18n="feedback.scale.4">Satisfied</span></label>
+                  <label><input type="radio" name="reception_rating" value="3" /><span data-i18n="feedback.scale.3">Neutral</span></label>
+                  <label><input type="radio" name="reception_rating" value="2" /><span data-i18n="feedback.scale.2">Dissatisfied</span></label>
+                  <label><input type="radio" name="reception_rating" value="1" /><span data-i18n="feedback.scale.1">Very dissatisfied</span></label>
+                </div>
+              </fieldset>
+
+              <fieldset class="feedback-question">
+                <legend data-i18n="feedback.question.waitingTime">Waiting time *</legend>
+                <div class="feedback-scale" data-rating-group>
+                  <label><input type="radio" name="waiting_time_rating" value="5" required /><span data-i18n="feedback.scale.5">Very satisfied</span></label>
+                  <label><input type="radio" name="waiting_time_rating" value="4" /><span data-i18n="feedback.scale.4">Satisfied</span></label>
+                  <label><input type="radio" name="waiting_time_rating" value="3" /><span data-i18n="feedback.scale.3">Neutral</span></label>
+                  <label><input type="radio" name="waiting_time_rating" value="2" /><span data-i18n="feedback.scale.2">Dissatisfied</span></label>
+                  <label><input type="radio" name="waiting_time_rating" value="1" /><span data-i18n="feedback.scale.1">Very dissatisfied</span></label>
+                </div>
+              </fieldset>
+
+              <fieldset class="feedback-question">
+                <legend data-i18n="feedback.question.cleanliness">Cleanliness and comfort *</legend>
+                <div class="feedback-scale" data-rating-group>
+                  <label><input type="radio" name="cleanliness_rating" value="5" required /><span data-i18n="feedback.scale.5">Very satisfied</span></label>
+                  <label><input type="radio" name="cleanliness_rating" value="4" /><span data-i18n="feedback.scale.4">Satisfied</span></label>
+                  <label><input type="radio" name="cleanliness_rating" value="3" /><span data-i18n="feedback.scale.3">Neutral</span></label>
+                  <label><input type="radio" name="cleanliness_rating" value="2" /><span data-i18n="feedback.scale.2">Dissatisfied</span></label>
+                  <label><input type="radio" name="cleanliness_rating" value="1" /><span data-i18n="feedback.scale.1">Very dissatisfied</span></label>
+                </div>
+              </fieldset>
+
+              <fieldset class="feedback-question">
+                <legend data-i18n="feedback.question.overallConfidence">Overall confidence in the hospital *</legend>
+                <div class="feedback-scale" data-rating-group>
+                  <label><input type="radio" name="overall_confidence_rating" value="5" required /><span data-i18n="feedback.scale.5">Very satisfied</span></label>
+                  <label><input type="radio" name="overall_confidence_rating" value="4" /><span data-i18n="feedback.scale.4">Satisfied</span></label>
+                  <label><input type="radio" name="overall_confidence_rating" value="3" /><span data-i18n="feedback.scale.3">Neutral</span></label>
+                  <label><input type="radio" name="overall_confidence_rating" value="2" /><span data-i18n="feedback.scale.2">Dissatisfied</span></label>
+                  <label><input type="radio" name="overall_confidence_rating" value="1" /><span data-i18n="feedback.scale.1">Very dissatisfied</span></label>
+                </div>
+              </fieldset>
+            </div>
+
+            <div class="feedback-form__section">
+              <h2 class="feedback-form__section-title" data-i18n="feedback.section.accessibility">Accessibility and support</h2>
+
+              <fieldset class="feedback-question">
+                <legend data-i18n="feedback.question.languageClarity">Could you understand staff in your preferred language? *</legend>
+                <div class="feedback-scale" data-rating-group>
+                  <label><input type="radio" name="language_clarity_rating" value="5" required /><span data-i18n="feedback.scale.5">Very satisfied</span></label>
+                  <label><input type="radio" name="language_clarity_rating" value="4" /><span data-i18n="feedback.scale.4">Satisfied</span></label>
+                  <label><input type="radio" name="language_clarity_rating" value="3" /><span data-i18n="feedback.scale.3">Neutral</span></label>
+                  <label><input type="radio" name="language_clarity_rating" value="2" /><span data-i18n="feedback.scale.2">Dissatisfied</span></label>
+                  <label><input type="radio" name="language_clarity_rating" value="1" /><span data-i18n="feedback.scale.1">Very dissatisfied</span></label>
+                </div>
+              </fieldset>
+
+              <fieldset class="feedback-question">
+                <legend data-i18n="feedback.question.wayfinding">Signs and directions were easy to follow *</legend>
+                <div class="feedback-scale" data-rating-group>
+                  <label><input type="radio" name="wayfinding_rating" value="5" required /><span data-i18n="feedback.scale.5">Very satisfied</span></label>
+                  <label><input type="radio" name="wayfinding_rating" value="4" /><span data-i18n="feedback.scale.4">Satisfied</span></label>
+                  <label><input type="radio" name="wayfinding_rating" value="3" /><span data-i18n="feedback.scale.3">Neutral</span></label>
+                  <label><input type="radio" name="wayfinding_rating" value="2" /><span data-i18n="feedback.scale.2">Dissatisfied</span></label>
+                  <label><input type="radio" name="wayfinding_rating" value="1" /><span data-i18n="feedback.scale.1">Very dissatisfied</span></label>
+                </div>
+              </fieldset>
+
+              <div class="appointment-form__field">
+                <label for="accessibility_support" data-i18n="feedback.field.accessibilitySupport">Did you need extra support due to age, disability, literacy, or assistance needs? *</label>
+                <select id="accessibility_support" name="accessibility_support" required>
+                  <option value="" data-i18n="feedback.selectPrompt">Select an option</option>
+                  <option value="no" data-i18n="feedback.accessibility.no">No extra support needed</option>
+                  <option value="some_help" data-i18n="feedback.accessibility.someHelp">Needed some help</option>
+                  <option value="major_help" data-i18n="feedback.accessibility.majorHelp">Needed a lot of help</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="feedback-form__section">
+              <h2 class="feedback-form__section-title" data-i18n="feedback.section.improvement">Tell us what to improve</h2>
+
+              <div class="appointment-form__field">
+                <label for="would_recommend" data-i18n="feedback.field.recommend">Would you recommend this hospital to others? *</label>
+                <select id="would_recommend" name="would_recommend" required>
+                  <option value="" data-i18n="feedback.selectPrompt">Select an option</option>
+                  <option value="yes" data-i18n="feedback.recommend.yes">Yes</option>
+                  <option value="maybe" data-i18n="feedback.recommend.maybe">Maybe</option>
+                  <option value="no" data-i18n="feedback.recommend.no">No</option>
+                </select>
+              </div>
+
+              <div class="appointment-form__field">
+                <label for="what_went_well" data-i18n="feedback.field.whatWentWell">What went well? (Optional)</label>
+                <textarea id="what_went_well" name="what_went_well" rows="4" data-i18n-attr="placeholder:feedback.placeholder.whatWentWell" placeholder="Tell us what the hospital did well."></textarea>
+              </div>
+
+              <div class="appointment-form__field">
+                <label for="improvement_priority" data-i18n="feedback.field.improvementPriority">What should improve first? (Optional)</label>
+                <textarea id="improvement_priority" name="improvement_priority" rows="4" data-i18n-attr="placeholder:feedback.placeholder.improvementPriority" placeholder="Tell us the most important improvement you want to see."></textarea>
+              </div>
+            </div>
+
+            <div class="feedback-form__section">
+              <h2 class="feedback-form__section-title" data-i18n="feedback.section.followUp">Optional follow-up</h2>
+
+              <div class="feedback-checkbox">
+                <label for="follow_up_requested">
+                  <input type="checkbox" id="follow_up_requested" name="follow_up_requested" />
+                  <span data-i18n="feedback.field.followUpRequested">I want the hospital to contact me about this feedback.</span>
+                </label>
+              </div>
+
+              <div class="appointment-form__field appointment-form__field--half">
+                <label for="respondent_name" data-i18n="feedback.field.name">Name (Optional)</label>
+                <input type="text" id="respondent_name" name="respondent_name" autocomplete="name" />
+              </div>
+
+              <div class="appointment-form__field appointment-form__field--half">
+                <label for="respondent_phone" data-i18n="feedback.field.phone">Phone (Optional)</label>
+                <input type="tel" id="respondent_phone" name="respondent_phone" autocomplete="tel" />
+              </div>
+            </div>
+
+            <div class="appointment-form__actions">
+              <button type="submit" class="button button--primary" data-i18n="feedback.submit">Submit Feedback</button>
+            </div>
+
+            <p id="feedback-form-message" class="appointment-form__message" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <img src="Assets/images/Logo.png" alt="Dr. R. G. Karudagimath Memorial Nursing Home footer logo" class="site-footer__logo" data-i18n-attr="alt:common.footerLogoAlt" />
+      <p data-i18n="common.hospitalNameBadami">Dr. R. G. Karudagimath Memorial Nursing Home, Badami</p>
+      <p>&copy; <span>2026</span> <span data-i18n="common.allRightsReserved">All rights reserved.</span></p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="i18n.js" defer></script>
+  <script src="supabaseClient.js" defer></script>
+  <script src="feedback.js" defer></script>
+</body>
+</html>
