@@ -15,6 +15,11 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   let scheduleLookup = new Map();
+  const SPECIALIZATION_ONLY_DOCTORS = new Set([
+    'drbhrevanasiddappa',
+    'drkirankumarskulageri',
+    'drjayantkumar'
+  ]);
   const i18n = window.siteI18n;
 
   const form = document.getElementById('appointment-form');
@@ -302,6 +307,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function formatDoctorOptionLabel(doctorName, speciality) {
     const localizedName = localizeDoctorName(doctorName);
     const trimmedSpeciality = String(speciality || '').trim();
+
+    if (SPECIALIZATION_ONLY_DOCTORS.has(normalizeDoctorName(doctorName)) && trimmedSpeciality) {
+      return trimmedSpeciality;
+    }
+
     return trimmedSpeciality ? `${localizedName} - ${trimmedSpeciality}` : localizedName;
   }
 

@@ -655,6 +655,36 @@ p {
   border-bottom: 1px solid var(--color-border);
 }
 
+.doctor-card__token {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  display: grid;
+  place-items: center;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-primary);
+  background: var(--color-surface-muted);
+}
+
+.doctor-card__token svg {
+  width: 3rem;
+  height: 3rem;
+}
+
+.doctor-card__token--general-surgery {
+  background: linear-gradient(180deg, #f9f2eb 0%, #f1e3d0 100%);
+  color: #9c5a33;
+}
+
+.doctor-card__token--paediatrics {
+  background: linear-gradient(180deg, #eef7ff 0%, #d7ebff 100%);
+  color: #24699d;
+}
+
+.doctor-card__token--dental {
+  background: linear-gradient(180deg, #f6f9f9 0%, #d9edf0 100%);
+  color: #257070;
+}
+
 .doctor-card__content {
   padding: 1rem 1rem 0.2rem;
   display: grid;
